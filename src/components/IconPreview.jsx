@@ -104,14 +104,14 @@ export function IconPreview({icon, isCompact}) {
 				</div>
 			)}
 
-			<div className={cn("flex-1", isCompact ? "p-0" : "p-0.5 py-3")}>
+			<div className={cn('flex-1', isCompact ? 'p-0' : 'p-0.5 py-3')}>
 				<div className="flex items-center justify-center h-full">
 					<div
 						className={cn(
 							'relative cursor-pointer',
 							'transition-all duration-200 ease-out',
 							'hover:scale-110',
-							isCompact ? 'w-full h-full' : 'w-16 h-16'
+							isCompact ? 'w-full h-full' : 'w-16 h-16',
 						)}
 						onMouseEnter={handleMouseEnter}
 						onMouseLeave={handleMouseLeave}

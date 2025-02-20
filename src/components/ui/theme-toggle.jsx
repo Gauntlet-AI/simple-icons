@@ -11,7 +11,7 @@ import {Button} from './button';
 /**
  * @param {ThemeToggleProps} props
  */
-export function ThemeToggle({ onTransitionStart, onTransitionEnd }) {
+export function ThemeToggle({onTransitionStart, onTransitionEnd}) {
 	const [theme, setTheme] = React.useState(() => {
 		if (typeof globalThis !== 'undefined') {
 			return document.documentElement.classList.contains('dark')
@@ -26,12 +26,12 @@ export function ThemeToggle({ onTransitionStart, onTransitionEnd }) {
 	const handleThemeChange = () => {
 		setIsTransitioning(true);
 		onTransitionStart?.();
-		
+
 		// Wait for fade out
 		setTimeout(() => {
 			// Change theme
 			setTheme(theme === 'dark' ? 'light' : 'dark');
-			
+
 			// Wait a bit to ensure theme is applied
 			setTimeout(() => {
 				setIsTransitioning(false);

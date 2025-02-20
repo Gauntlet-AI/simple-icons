@@ -79,8 +79,8 @@ const TITLE_TO_SLUG_REPLACEMENTS = {
  * @param {Icon[]} icons The array of icons to process.
  * @param {number} chunkSize The size of each chunk.
  * @param {(icons: Icon[]) => void} onUpdate Callback to update the icons.
- * @param {(count: number) => void} onProgress - Callback to update the progress.
- * @param {() => boolean} shouldCancel - Function to check if processing should be cancelled
+ * @param {(count: number) => void} onProgress Callback to update the progress.
+ * @param {() => boolean} shouldCancel Function to check if processing should be cancelled.
  */
 function processIconChunk(
 	startIndex,
@@ -146,7 +146,9 @@ const generateIconSlug = (title) => {
 function App() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [icons, setIcons] = useState(/** @type {Icon[]} */ ([]));
-	const [filteredIcons, setFilteredIcons] = useState(/** @type {Icon[]} */ ([]));
+	const [filteredIcons, setFilteredIcons] = useState(
+		/** @type {Icon[]} */ ([]),
+	);
 	const [visibleIcons, setVisibleIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [error, setError] = useState(/** @type {string | null} */ (null));
 	const [isLoading, setIsLoading] = useState(true);
@@ -163,26 +165,26 @@ function App() {
 	const ICONS_PER_PAGE = 700; // Only used in regular view
 	const COMPACT_CHUNK_SIZE = 500; // Size of chunks to load in compact view
 	const observerTarget = useRef(null);
-	const loadingChunkRef = useRef(false);
+	const loadingChunkReference = useRef(false);
 
 	// Effect to handle chunked loading in compact view
 	useEffect(() => {
 		if (!isCompactView) return;
 
 		const loadNextChunk = () => {
-			if (loadingChunkRef.current) return;
-			loadingChunkRef.current = true;
+			if (loadingChunkReference.current) return;
+			loadingChunkReference.current = true;
 
-			setVisibleIcons(prev => {
-				const nextChunkEnd = prev.length + COMPACT_CHUNK_SIZE;
+			setVisibleIcons((previous) => {
+				const nextChunkEnd = previous.length + COMPACT_CHUNK_SIZE;
 				const newIcons = filteredIcons.slice(0, nextChunkEnd);
-				
+
 				// If we've loaded all icons, set hasMore to false
 				if (newIcons.length >= filteredIcons.length) {
 					setHasMore(false);
 				}
-				
-				loadingChunkRef.current = false;
+
+				loadingChunkReference.current = false;
 				return newIcons;
 			});
 		};
@@ -210,6 +212,7 @@ function App() {
 			if (currentPage === 1 || previous.length > newIcons.length) {
 				return newIcons;
 			}
+
 			return previous.length >= newIcons.length ? previous : newIcons;
 		});
 		setHasMore(endIndex < filteredIcons.length);
@@ -268,17 +271,22 @@ function App() {
 		// Reset loading state for both views
 		if (isCompactView) {
 			// In compact view, start with first chunk
-			setVisibleIcons(searchTerm.trim() === '' ? 
-				icons.slice(0, COMPACT_CHUNK_SIZE) : 
-				icons.filter(icon => icon.title.toLowerCase().includes(searchTerm.toLowerCase()))
-					.slice(0, COMPACT_CHUNK_SIZE)
+			setVisibleIcons(
+				searchTerm.trim() === ''
+					? icons.slice(0, COMPACT_CHUNK_SIZE)
+					: icons
+							.filter((icon) =>
+								icon.title.toLowerCase().includes(searchTerm.toLowerCase()),
+							)
+							.slice(0, COMPACT_CHUNK_SIZE),
 			);
 			setHasMore(true);
 		} else {
 			setCurrentPage(1);
 			setHasMore(true);
 		}
-		loadingChunkRef.current = false;
+
+		loadingChunkReference.current = false;
 	}, [searchTerm, icons, isCompactView, COMPACT_CHUNK_SIZE]);
 
 	const startColoringAll = () => {
@@ -286,7 +294,9 @@ function App() {
 			cancelColoringReference.current = true;
 			setIsColoringAll(false);
 			// Reset all icons to uncolored state when canceling
-			setFilteredIcons(icons => icons.map(icon => ({...icon, forceColored: false})));
+			setFilteredIcons((icons) =>
+				icons.map((icon) => ({...icon, forceColored: false})),
+			);
 			setColoredIconsCount(0);
 			return;
 		}
@@ -312,12 +322,12 @@ function App() {
 
 	const handleViewChange = () => {
 		setIsViewTransitioning(true);
-		loadingChunkRef.current = false;
-		
+		loadingChunkReference.current = false;
+
 		// Immediately set the new view state
-		setIsCompactView((prev) => {
-			const newIsCompact = !prev;
-			
+		setIsCompactView((previous) => {
+			const newIsCompact = !previous;
+
 			if (newIsCompact) {
 				// If switching to compact view, start with first chunk
 				setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
@@ -328,7 +338,7 @@ function App() {
 				setCurrentPage(1);
 				setHasMore(true);
 			}
-			
+
 			return newIsCompact;
 		});
 
@@ -343,7 +353,7 @@ function App() {
 		setIsLoading(true);
 
 		// Fetch the icons data
-		fetch('/_data/simple-icons.json')
+		fetch('/simple-icons.json')
 			.then(async (response) => {
 				console.log('Received response:', {
 					status: response.status,
@@ -438,11 +448,13 @@ function App() {
 
 	return (
 		<ToastContextProvider>
-			<div className={cn(
-				"min-h-screen bg-background text-foreground",
-				"transition-opacity duration-200",
-				isThemeTransitioning && "opacity-0"
-			)}>
+			<div
+				className={cn(
+					'min-h-screen bg-background text-foreground',
+					'transition-opacity duration-200',
+					isThemeTransitioning && 'opacity-0',
+				)}
+			>
 				<div className="container py-10 space-y-8">
 					<div className="space-y-2">
 						<h1 className="text-3xl font-bold tracking-tight">
@@ -459,7 +471,10 @@ function App() {
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						/>
-						<ThemeToggle onTransitionStart={() => setIsThemeTransitioning(true)} onTransitionEnd={() => setIsThemeTransitioning(false)} />
+						<ThemeToggle
+							onTransitionStart={() => setIsThemeTransitioning(true)}
+							onTransitionEnd={() => setIsThemeTransitioning(false)}
+						/>
 						<Button
 							variant={isCompactView ? 'secondary' : 'outline'}
 							size="icon"
@@ -507,13 +522,13 @@ function App() {
 						</Button>
 					</div>
 
-					<div 
+					<div
 						className={cn(
-							"grid transition-opacity duration-200",
-							isViewTransitioning ? "opacity-0" : "opacity-100",
-							isCompactView 
-								? "grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-0.5"
-								: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4"
+							'grid transition-opacity duration-200',
+							isViewTransitioning ? 'opacity-0' : 'opacity-100',
+							isCompactView
+								? 'grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-0.5'
+								: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4',
 						)}
 					>
 						{memoizedIcons}

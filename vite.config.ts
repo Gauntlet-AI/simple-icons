@@ -14,8 +14,14 @@ export default defineConfig({
 		sourcemap: true,
 		assetsDir: 'assets',
 		emptyOutDir: true,
+		rollupOptions: {
+			input: {
+				main: path.resolve(__dirname, 'index.html'),
+			},
+		},
 	},
 	base: './',
+	publicDir: '_data',
 	define: {
 		// Add any needed environment variables here
 		__DEFINES__: JSON.stringify({}),
