@@ -1,5 +1,5 @@
 import path from 'node:path';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import {defineConfig} from 'vite';
 
 // https://vitejs.dev/config/
@@ -19,5 +19,6 @@ export default defineConfig({
 			'@icons': path.resolve(__dirname, './icons'),
 			'@data': path.resolve(__dirname, './_data'),
 		},
+		extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx', '.json'],
 	},
 });
