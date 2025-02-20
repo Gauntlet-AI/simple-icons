@@ -97,11 +97,46 @@ function createColorFilter(hex) {
 function IconPreview({ icon }) {
 	const [isColored, setIsColored] = useState(false);
 	const [svgContent, setSvgContent] = useState('');
+	const [isCopied, setIsCopied] = useState(false);
 	const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
 
 	const copyHexToClipboard = (e) => {
 		e.stopPropagation(); // Prevent triggering the color toggle
 		navigator.clipboard.writeText(`#${icon.hex}`);
+		setIsCopied(true);
+		// Show toast
+		const toast = document.createElement('div');
+		toast.textContent = 'Copied to clipboard!';
+		toast.style.position = 'fixed';
+		toast.style.bottom = '20px';
+		toast.style.left = '50%';
+		toast.style.transform = 'translateX(-50%)';
+		toast.style.backgroundColor = '#333';
+		toast.style.color = '#fff';
+		toast.style.padding = '8px 16px';
+		toast.style.borderRadius = '4px';
+		toast.style.fontSize = '14px';
+		toast.style.transition = 'all 0.3s ease';
+		toast.style.opacity = '0';
+		document.body.appendChild(toast);
+		
+		// Animate in
+		setTimeout(() => {
+			toast.style.opacity = '1';
+		}, 10);
+
+		// Reset copy state after animation
+		setTimeout(() => {
+			setIsCopied(false);
+		}, 1000);
+
+		// Remove toast after delay
+		setTimeout(() => {
+			toast.style.opacity = '0';
+			setTimeout(() => {
+				document.body.removeChild(toast);
+			}, 300);
+		}, 2000);
 	};
 
 	useEffect(() => {
@@ -180,10 +215,31 @@ function IconPreview({ icon }) {
 								justifyContent: 'center',
 								cursor: 'pointer',
 								fontSize: '12px',
-								opacity: 0.8
+								opacity: 0.8,
+								transform: isCopied ? 'scale(1.2)' : 'scale(1)',
+								transition: 'all 0.2s ease',
+								position: 'relative',
+								backgroundColor: 'rgba(128, 128, 128, 0.08)'
 							}}
 						>
-							⎘
+							<div style={{
+								position: 'absolute',
+								opacity: isCopied ? 0 : 1,
+								transition: 'opacity 0.2s ease',
+								fontSize: '16px',
+								fontWeight: 'bold'
+							}}>
+								⧉
+							</div>
+							<div style={{
+								position: 'absolute',
+								opacity: isCopied ? 1 : 0,
+								transition: 'opacity 0.2s ease',
+								fontSize: '14px',
+								fontWeight: 'bold'
+							}}>
+								✓
+							</div>
 						</div>
 					</div>
 				</div>
