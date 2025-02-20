@@ -99,7 +99,31 @@ function IconPreview({ icon }) {
 	const [svgContent, setSvgContent] = useState('');
 	const [isCopied, setIsCopied] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
+	const hoverTimeoutRef = React.useRef(null);
 	const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
+
+	// Cleanup hover timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (hoverTimeoutRef.current) {
+				clearTimeout(hoverTimeoutRef.current);
+			}
+		};
+	}, []);
+
+	const handleMouseEnter = () => {
+		if (hoverTimeoutRef.current) {
+			clearTimeout(hoverTimeoutRef.current);
+		}
+		setIsHovered(true);
+	};
+
+	const handleMouseLeave = () => {
+		// Small delay to prevent flickering
+		hoverTimeoutRef.current = setTimeout(() => {
+			setIsHovered(false);
+		}, 50);
+	};
 
 	// Update isColored when the parent changes it
 	useEffect(() => {
@@ -207,8 +231,8 @@ function IconPreview({ icon }) {
 				position: 'relative'
 			}}>
 				<div 
-					onMouseEnter={() => setIsHovered(true)}
-					onMouseLeave={() => setIsHovered(false)}
+					onMouseEnter={handleMouseEnter}
+					onMouseLeave={handleMouseLeave}
 					onClick={copySvgToClipboard}
 					style={{ 
 						width: '48px',
@@ -217,7 +241,8 @@ function IconPreview({ icon }) {
 						cursor: 'pointer',
 						position: 'relative',
 						transform: isHovered ? 'scale(1.1)' : 'scale(1)',
-						transition: 'all 0.2s ease'
+						transition: 'all 0.2s ease',
+						pointerEvents: 'auto'
 					}}
 				>
 					<div
@@ -226,7 +251,8 @@ function IconPreview({ icon }) {
 						}}
 						style={{
 							filter: isHovered ? 'brightness(0.8)' : 'none',
-							transition: 'all 0.2s ease'
+							transition: 'all 0.2s ease',
+							pointerEvents: 'none'
 						}}
 					/>
 					{isHovered && (
@@ -243,7 +269,8 @@ function IconPreview({ icon }) {
 							alignItems: 'center',
 							justifyContent: 'center',
 							color: '#fff',
-							fontSize: '24px'
+							fontSize: '24px',
+							pointerEvents: 'none'
 						}}>
 							⧉
 						</div>
