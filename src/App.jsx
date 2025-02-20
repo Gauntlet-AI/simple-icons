@@ -98,15 +98,58 @@ function IconPreview({ icon }) {
 	const [isColored, setIsColored] = useState(false);
 	const [svgContent, setSvgContent] = useState('');
 	const [isCopied, setIsCopied] = useState(false);
+	const [isHovered, setIsHovered] = useState(false);
 	const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
+
+	// Update isColored when the parent changes it
+	useEffect(() => {
+		if (icon.forceColored !== undefined) {
+			setIsColored(icon.forceColored);
+		}
+	}, [icon.forceColored]);
+
+	const copySvgToClipboard = (e) => {
+		e.stopPropagation(); // Prevent triggering the color toggle
+		navigator.clipboard.writeText(svgContent);
+		
+		// Show toast
+		const toast = document.createElement('div');
+		toast.textContent = 'SVG copied to clipboard!';
+		toast.style.position = 'fixed';
+		toast.style.bottom = '20px';
+		toast.style.left = '50%';
+		toast.style.transform = 'translateX(-50%)';
+		toast.style.backgroundColor = '#333';
+		toast.style.color = '#fff';
+		toast.style.padding = '8px 16px';
+		toast.style.borderRadius = '4px';
+		toast.style.fontSize = '14px';
+		toast.style.transition = 'all 0.3s ease';
+		toast.style.opacity = '0';
+		document.body.appendChild(toast);
+		
+		// Animate in
+		setTimeout(() => {
+			toast.style.opacity = '1';
+		}, 10);
+
+		// Remove toast after delay
+		setTimeout(() => {
+			toast.style.opacity = '0';
+			setTimeout(() => {
+				document.body.removeChild(toast);
+			}, 300);
+		}, 2000);
+	};
 
 	const copyHexToClipboard = (e) => {
 		e.stopPropagation(); // Prevent triggering the color toggle
 		navigator.clipboard.writeText(`#${icon.hex}`);
 		setIsCopied(true);
+		
 		// Show toast
 		const toast = document.createElement('div');
-		toast.textContent = 'Copied to clipboard!';
+		toast.textContent = 'Color copied to clipboard!';
 		toast.style.position = 'fixed';
 		toast.style.bottom = '20px';
 		toast.style.left = '50%';
@@ -160,18 +203,52 @@ function IconPreview({ icon }) {
 				flex: 1, 
 				display: 'flex', 
 				alignItems: 'center', 
-				justifyContent: 'center'
+				justifyContent: 'center',
+				position: 'relative'
 			}}>
 				<div 
+					onMouseEnter={() => setIsHovered(true)}
+					onMouseLeave={() => setIsHovered(false)}
+					onClick={copySvgToClipboard}
 					style={{ 
 						width: '48px',
 						height: '48px',
-						color: isColored ? `#${icon.hex}` : '#FFFFFF'
+						color: isColored ? `#${icon.hex}` : '#FFFFFF',
+						cursor: 'pointer',
+						position: 'relative',
+						transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+						transition: 'all 0.2s ease'
 					}}
-					dangerouslySetInnerHTML={{ 
-						__html: svgContent.replace('<svg', '<svg fill="currentColor"')
-					}}
-				/>
+				>
+					<div
+						dangerouslySetInnerHTML={{ 
+							__html: svgContent.replace('<svg', '<svg fill="currentColor"')
+						}}
+						style={{
+							filter: isHovered ? 'brightness(0.8)' : 'none',
+							transition: 'all 0.2s ease'
+						}}
+					/>
+					{isHovered && (
+						<div style={{
+							position: 'absolute',
+							top: '50%',
+							left: '50%',
+							transform: 'translate(-50%, -50%)',
+							backgroundColor: 'rgba(0, 0, 0, 0.5)',
+							borderRadius: '50%',
+							width: '36px',
+							height: '36px',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							color: '#fff',
+							fontSize: '24px'
+						}}>
+							⧉
+						</div>
+					)}
+				</div>
 			</div>
 			<div className="icon-title" style={{ padding: '8px', textAlign: 'center' }}>
 				{icon.title}
@@ -260,14 +337,55 @@ function getLuminance(hex) {
  */
 function App() {
 	const [searchTerm, setSearchTerm] = useState('');
-	/** @type {[Icon[], React.Dispatch<React.SetStateAction<Icon[]>>]} */
 	const [icons, setIcons] = useState(/** @type {Icon[]} */ ([]));
-	/** @type {[Icon[], React.Dispatch<React.SetStateAction<Icon[]>>]} */
-	const [filteredIcons, setFilteredIcons] = useState(
-		/** @type {Icon[]} */ ([]),
-	);
+	const [filteredIcons, setFilteredIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [error, setError] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isColoringAll, setIsColoringAll] = useState(false);
+	const [coloredIconsCount, setColoredIconsCount] = useState(0);
+	const cancelColoringRef = React.useRef(false);
+
+	const startColoringAll = () => {
+		if (isColoringAll) {
+			cancelColoringRef.current = true;
+			return;
+		}
+
+		setIsColoringAll(true);
+		cancelColoringRef.current = false;
+		setColoredIconsCount(0);
+		
+		const chunkSize = 10;
+		const totalIcons = filteredIcons.length;
+		
+		const processNextChunk = (startIndex) => {
+			if (startIndex >= totalIcons || cancelColoringRef.current) {
+				setIsColoringAll(false);
+				cancelColoringRef.current = false;
+				return;
+			}
+			
+			const endIndex = Math.min(startIndex + chunkSize, totalIcons);
+			const updatedIcons = [...filteredIcons];
+			let coloredInThisChunk = 0;
+			
+			// Update icons in this chunk
+			for (let i = startIndex; i < endIndex; i++) {
+				if (!updatedIcons[i].forceColored) {
+					updatedIcons[i] = { ...updatedIcons[i], forceColored: true };
+					coloredInThisChunk++;
+				}
+			}
+			
+			setFilteredIcons(updatedIcons);
+			setColoredIconsCount(prev => prev + coloredInThisChunk);
+			
+			// Process next chunk after a small delay
+			setTimeout(() => processNextChunk(endIndex), 100);
+		};
+		
+		processNextChunk(0);
+	};
 
 	// Debug function to test various path combinations
 	/** @param {string} slug */
@@ -441,17 +559,37 @@ function App() {
 		<div className="container">
 			<h1>Simple Icons Development Environment</h1>
 			<div className="status-info">Loaded {icons.length} icons</div>
-			<input
-				type="text"
-				placeholder="Search icons..."
-				value={searchTerm}
-				onChange={(e) => setSearchTerm(e.target.value)}
-				className="search-input"
-			/>
+			<div style={{
+				display: 'flex',
+				alignItems: 'center',
+				gap: '1rem',
+				margin: '2rem 1rem'
+			}}>
+				<input
+					type="text"
+					placeholder="Search icons..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					className="search-input"
+					style={{ margin: 0 }}
+				/>
+				<div className="button-bar">
+					<button
+						onClick={startColoringAll}
+						disabled={false}
+						className={`action-button primary ${isColoringAll ? 'disabled' : ''}`}
+					>
+						{isColoringAll 
+							? `Coloring... ${Math.round((coloredIconsCount / filteredIcons.length) * 100)}% (Click to Cancel)`
+							: 'Color All Symbols'
+						}
+					</button>
+				</div>
+			</div>
 			<div className="icons-grid">
 				{filteredIcons.map((icon) => (
 					<div key={icon.slug} className="icon-card">
-						<IconPreview icon={icon} />
+						<IconPreview icon={{...icon, forceColored: icon.forceColored}} />
 					</div>
 				))}
 			</div>
