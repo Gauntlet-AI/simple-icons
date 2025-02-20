@@ -79,15 +79,22 @@ export function IconPreview({icon, isCompact}) {
 	};
 
 	useEffect(() => {
+		console.log('Fetching icon:', iconPath);
 		fetch(iconPath)
-			.then((response) => response.text())
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`Failed to load icon: ${response.status} ${response.statusText}`);
+				}
+				return response.text();
+			})
 			.then((text) => {
+				console.log('Loaded icon:', icon.slug);
 				setSvgContent(text);
 			})
 			.catch((error) => {
 				console.error(`Failed to load icon: ${iconPath}`, error);
 			});
-	}, [iconPath]);
+	}, [iconPath, icon.slug]);
 
 	return (
 		<div

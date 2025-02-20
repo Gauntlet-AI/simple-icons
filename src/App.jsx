@@ -353,7 +353,7 @@ function App() {
 		setIsLoading(true);
 
 		// Fetch the icons data
-		fetch('/simple-icons.json')
+		fetch('/_data/simple-icons.json')
 			.then(async (response) => {
 				console.log('Received response:', {
 					status: response.status,
