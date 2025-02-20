@@ -93,7 +93,7 @@ export function IconPreview({icon, isCompact}) {
 		<div
 			className={cn(
 				'flex flex-col h-full relative overflow-hidden w-full',
-				'rounded-lg border bg-white dark:bg-gray-700',
+				!isCompact && 'rounded-lg border bg-white dark:bg-gray-700',
 			)}
 		>
 			{!isCompact && (
@@ -104,14 +104,14 @@ export function IconPreview({icon, isCompact}) {
 				</div>
 			)}
 
-			<div className="flex-1 p-0.5 py-3">
+			<div className={cn("flex-1", isCompact ? "p-0" : "p-0.5 py-3")}>
 				<div className="flex items-center justify-center h-full">
 					<div
 						className={cn(
 							'relative cursor-pointer',
 							'transition-all duration-200 ease-out',
 							'hover:scale-110',
-							'w-16 h-16',
+							isCompact ? 'w-full h-full' : 'w-16 h-16'
 						)}
 						onMouseEnter={handleMouseEnter}
 						onMouseLeave={handleMouseLeave}
@@ -125,7 +125,7 @@ export function IconPreview({icon, isCompact}) {
 								__html: svgContent.replace('<svg', '<svg fill="currentColor"'),
 							}}
 							className={cn(
-								'transition-all duration-200',
+								'transition-all duration-200 w-full h-full',
 								isHovered && 'opacity-75',
 							)}
 							style={{pointerEvents: 'none'}}
@@ -141,7 +141,7 @@ export function IconPreview({icon, isCompact}) {
 								)}
 							>
 								<Copy
-									size={40}
+									size={isCompact ? 24 : 40}
 									className="animate-in zoom-in-50 duration-200"
 								/>
 							</div>

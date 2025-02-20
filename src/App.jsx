@@ -91,6 +91,7 @@ function processIconChunk(
 	shouldCancel,
 ) {
 	if (startIndex >= icons.length || shouldCancel()) {
+		onUpdate(icons); // Ensure final state is updated
 		return;
 	}
 
@@ -108,7 +109,8 @@ function processIconChunk(
 	onUpdate(updatedIcons);
 	onProgress(coloredInThisChunk);
 
-	setTimeout(() => {
+	// Use requestAnimationFrame instead of setTimeout for smoother updates
+	requestAnimationFrame(() => {
 		processIconChunk(
 			endIndex,
 			updatedIcons,
@@ -117,7 +119,7 @@ function processIconChunk(
 			onProgress,
 			shouldCancel,
 		);
-	}, 100);
+	});
 }
 
 /**
@@ -144,40 +146,74 @@ const generateIconSlug = (title) => {
 function App() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [icons, setIcons] = useState(/** @type {Icon[]} */ ([]));
-	const [filteredIcons, setFilteredIcons] = useState(
-		/** @type {Icon[]} */ ([]),
-	);
+	const [filteredIcons, setFilteredIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [visibleIcons, setVisibleIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [error, setError] = useState(/** @type {string | null} */ (null));
 	const [isLoading, setIsLoading] = useState(true);
 	const [isColoringAll, setIsColoringAll] = useState(false);
 	const [coloredIconsCount, setColoredIconsCount] = useState(0);
 	const [isCompactView, setIsCompactView] = useState(false);
+	const [isViewTransitioning, setIsViewTransitioning] = useState(false);
+	const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
 	const cancelColoringReference = React.useRef(false);
 
 	// Lazy loading related states
 	const [currentPage, setCurrentPage] = useState(1);
 	const [hasMore, setHasMore] = useState(true);
-	const ICONS_PER_PAGE = 700; // Load many more icons at once
+	const ICONS_PER_PAGE = 700; // Only used in regular view
+	const COMPACT_CHUNK_SIZE = 500; // Size of chunks to load in compact view
 	const observerTarget = useRef(null);
+	const loadingChunkRef = useRef(false);
+
+	// Effect to handle chunked loading in compact view
+	useEffect(() => {
+		if (!isCompactView) return;
+
+		const loadNextChunk = () => {
+			if (loadingChunkRef.current) return;
+			loadingChunkRef.current = true;
+
+			setVisibleIcons(prev => {
+				const nextChunkEnd = prev.length + COMPACT_CHUNK_SIZE;
+				const newIcons = filteredIcons.slice(0, nextChunkEnd);
+				
+				// If we've loaded all icons, set hasMore to false
+				if (newIcons.length >= filteredIcons.length) {
+					setHasMore(false);
+				}
+				
+				loadingChunkRef.current = false;
+				return newIcons;
+			});
+		};
+
+		// Start loading chunks
+		if (visibleIcons.length < filteredIcons.length) {
+			requestAnimationFrame(loadNextChunk);
+		}
+	}, [isCompactView, filteredIcons, visibleIcons.length]);
 
 	const loadMoreIcons = useCallback(() => {
+		if (isCompactView) {
+			// In compact view, start with first chunk
+			setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
+			setHasMore(filteredIcons.length > COMPACT_CHUNK_SIZE);
+			return;
+		}
+
+		// Regular view - paginate as before
 		const startIndex = (currentPage - 1) * ICONS_PER_PAGE;
 		const endIndex = startIndex + ICONS_PER_PAGE;
 		const newIcons = filteredIcons.slice(0, endIndex);
 
-		// Instead of replacing all icons, append new ones
 		setVisibleIcons((previous) => {
-			// If we're on page 1, or if the filtered results have changed, start fresh
 			if (currentPage === 1 || previous.length > newIcons.length) {
 				return newIcons;
 			}
-
-			// Otherwise, keep existing icons and append new ones
 			return previous.length >= newIcons.length ? previous : newIcons;
 		});
 		setHasMore(endIndex < filteredIcons.length);
-	}, [currentPage, filteredIcons]);
+	}, [currentPage, filteredIcons, isCompactView, ICONS_PER_PAGE]);
 
 	// Memoize the IconBox components to prevent unnecessary re-renders
 	const memoizedIcons = useMemo(
@@ -190,6 +226,11 @@ function App() {
 
 	// Intersection Observer setup
 	useEffect(() => {
+		// Don't set up observer in compact view since we load all icons at once
+		if (isCompactView) {
+			return;
+		}
+
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting && hasMore) {
@@ -197,7 +238,6 @@ function App() {
 				}
 			},
 			{
-				// Trigger loading when sentinel is 3 viewport heights away
 				rootMargin: '300% 0px',
 				threshold: 0.1,
 			},
@@ -208,12 +248,12 @@ function App() {
 		}
 
 		return () => observer.disconnect();
-	}, [hasMore]);
+	}, [hasMore, isCompactView]);
 
 	// Load more icons when page changes
 	useEffect(() => {
 		loadMoreIcons();
-	}, [currentPage, loadMoreIcons]);
+	}, [currentPage, loadMoreIcons, filteredIcons]);
 
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
@@ -225,14 +265,29 @@ function App() {
 			setFilteredIcons(filtered);
 		}
 
-		// Reset pagination when search changes
-		setCurrentPage(1);
-		setHasMore(true);
-	}, [searchTerm, icons]);
+		// Reset loading state for both views
+		if (isCompactView) {
+			// In compact view, start with first chunk
+			setVisibleIcons(searchTerm.trim() === '' ? 
+				icons.slice(0, COMPACT_CHUNK_SIZE) : 
+				icons.filter(icon => icon.title.toLowerCase().includes(searchTerm.toLowerCase()))
+					.slice(0, COMPACT_CHUNK_SIZE)
+			);
+			setHasMore(true);
+		} else {
+			setCurrentPage(1);
+			setHasMore(true);
+		}
+		loadingChunkRef.current = false;
+	}, [searchTerm, icons, isCompactView, COMPACT_CHUNK_SIZE]);
 
 	const startColoringAll = () => {
 		if (isColoringAll) {
 			cancelColoringReference.current = true;
+			setIsColoringAll(false);
+			// Reset all icons to uncolored state when canceling
+			setFilteredIcons(icons => icons.map(icon => ({...icon, forceColored: false})));
+			setColoredIconsCount(0);
 			return;
 		}
 
@@ -244,10 +299,43 @@ function App() {
 			0,
 			filteredIcons,
 			10,
-			setFilteredIcons,
+			(updatedIcons) => {
+				setFilteredIcons(updatedIcons);
+				if (cancelColoringReference.current) {
+					setIsColoringAll(false);
+				}
+			},
 			(count) => setColoredIconsCount((previous) => previous + count),
 			() => cancelColoringReference.current,
 		);
+	};
+
+	const handleViewChange = () => {
+		setIsViewTransitioning(true);
+		loadingChunkRef.current = false;
+		
+		// Immediately set the new view state
+		setIsCompactView((prev) => {
+			const newIsCompact = !prev;
+			
+			if (newIsCompact) {
+				// If switching to compact view, start with first chunk
+				setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
+				setHasMore(filteredIcons.length > COMPACT_CHUNK_SIZE);
+			} else {
+				// If switching to regular view, reset to initial state
+				setVisibleIcons([]);
+				setCurrentPage(1);
+				setHasMore(true);
+			}
+			
+			return newIsCompact;
+		});
+
+		// Give a small delay for the layout to be ready
+		setTimeout(() => {
+			setIsViewTransitioning(false);
+		}, 150);
 	};
 
 	useEffect(() => {
@@ -350,7 +438,11 @@ function App() {
 
 	return (
 		<ToastContextProvider>
-			<div className="min-h-screen bg-background text-foreground">
+			<div className={cn(
+				"min-h-screen bg-background text-foreground",
+				"transition-opacity duration-200",
+				isThemeTransitioning && "opacity-0"
+			)}>
 				<div className="container py-10 space-y-8">
 					<div className="space-y-2">
 						<h1 className="text-3xl font-bold tracking-tight">
@@ -367,13 +459,17 @@ function App() {
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						/>
-						<ThemeToggle />
+						<ThemeToggle onTransitionStart={() => setIsThemeTransitioning(true)} onTransitionEnd={() => setIsThemeTransitioning(false)} />
 						<Button
 							variant={isCompactView ? 'secondary' : 'outline'}
 							size="icon"
-							onClick={() => setIsCompactView(!isCompactView)}
+							onClick={handleViewChange}
+							disabled={isViewTransitioning}
+							className="relative"
 						>
-							{isCompactView ? (
+							{isViewTransitioning ? (
+								<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+							) : isCompactView ? (
 								<LayoutGrid className="h-4 w-4" />
 							) : (
 								<Grid className="h-4 w-4" />
@@ -411,9 +507,17 @@ function App() {
 						</Button>
 					</div>
 
-					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+					<div 
+						className={cn(
+							"grid transition-opacity duration-200",
+							isViewTransitioning ? "opacity-0" : "opacity-100",
+							isCompactView 
+								? "grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-0.5"
+								: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4"
+						)}
+					>
 						{memoizedIcons}
-						{hasMore && (
+						{!isCompactView && hasMore && (
 							<div
 								ref={observerTarget}
 								className="col-span-full h-10 flex items-center justify-center"
