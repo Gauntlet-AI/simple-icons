@@ -1,7 +1,8 @@
-import {Check, Copy, Maximize2} from 'lucide-react';
+import {Check, Copy, Maximize2, Sparkles} from 'lucide-react';
 import React, {useEffect, useState} from 'react';
 import {cn} from '../lib/utils.js';
 import {useToast} from './ui/toast-context';
+import {IconAnalysis} from './IconAnalysis';
 
 /**
  * Calculate the relative luminance of a hex color.
@@ -23,6 +24,7 @@ export function IconPreview({icon, isCompact}) {
 	const [svgContent, setSvgContent] = useState('');
 	const [isCopied, setIsCopied] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
+	const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 	const {showToast} = useToast();
 	/** @type {React.MutableRefObject<NodeJS.Timeout | null>} */
 	const hoverTimeoutReference = React.useRef(null);
@@ -97,113 +99,127 @@ export function IconPreview({icon, isCompact}) {
 	}, [iconPath, icon.slug]);
 
 	return (
-		<div
-			className={cn(
-				'flex flex-col h-full relative overflow-hidden w-full',
-				!isCompact && 'rounded-lg border bg-white dark:bg-gray-700',
-			)}
-		>
-			{!isCompact && (
-				<div className="bg-gray-50 dark:bg-gray-800 border-b flex items-center justify-center">
-					<div className="px-3 py-1.5 text-xs font-medium line-clamp-2 text-center border-b border-gray-200 dark:border-gray-600 w-full">
-						{icon.title}
+		<>
+			<div
+				className={cn(
+					'flex flex-col h-full relative overflow-hidden w-full',
+					!isCompact && 'rounded-lg border bg-white dark:bg-gray-700',
+				)}
+			>
+				{!isCompact && (
+					<div className="bg-gray-50 dark:bg-gray-800 border-b flex items-center justify-between">
+						<div className="px-3 py-1.5 text-xs font-medium line-clamp-2 text-center border-b border-gray-200 dark:border-gray-600 flex-1">
+							{icon.title}
+						</div>
+						<button
+							onClick={() => setIsAnalysisOpen(true)}
+							className="px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200"
+							title="AI Analysis"
+						>
+							<Sparkles size={16} />
+						</button>
+					</div>
+				)}
+
+				<div className={cn('flex-1', isCompact ? 'p-0' : 'p-0.5 py-3')}>
+					<div className="flex items-center justify-center h-full">
+						<div
+							className={cn(
+								'relative cursor-pointer',
+								'transition-all duration-200 ease-out',
+								'hover:scale-110',
+								isCompact ? 'w-full h-full' : 'w-16 h-16',
+							)}
+							onMouseEnter={handleMouseEnter}
+							onMouseLeave={handleMouseLeave}
+							onClick={copySvgToClipboard}
+							style={{
+								color: isColored ? `#${icon.hex}` : 'currentColor',
+							}}
+						>
+							<div
+								dangerouslySetInnerHTML={{
+									__html: svgContent.replace('<svg', '<svg fill="currentColor"'),
+								}}
+								className={cn(
+									'transition-all duration-200 w-full h-full',
+									isHovered && 'opacity-75',
+								)}
+								style={{pointerEvents: 'none'}}
+							/>
+							{isHovered && (
+								<div
+									className={cn(
+										'absolute inset-0 flex items-center justify-center',
+										'bg-black/60 backdrop-blur-[1px]',
+										'rounded-sm',
+										'text-white pointer-events-none',
+										'animate-in fade-in-0 duration-200',
+									)}
+								>
+									<Copy
+										size={isCompact ? 24 : 40}
+										className="animate-in zoom-in-50 duration-200"
+									/>
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
-			)}
 
-			<div className={cn('flex-1', isCompact ? 'p-0' : 'p-0.5 py-3')}>
-				<div className="flex items-center justify-center h-full">
+				{!isCompact && (
 					<div
 						className={cn(
-							'relative cursor-pointer',
-							'transition-all duration-200 ease-out',
-							'hover:scale-110',
-							isCompact ? 'w-full h-full' : 'w-16 h-16',
+							'flex items-center',
+							'transition-colors duration-200',
+							getLuminance(icon.hex) > 0.5 ? 'text-gray-900' : 'text-white',
 						)}
-						onMouseEnter={handleMouseEnter}
-						onMouseLeave={handleMouseLeave}
-						onClick={copySvgToClipboard}
 						style={{
-							color: isColored ? `#${icon.hex}` : 'currentColor',
+							backgroundColor: `#${icon.hex}`,
 						}}
 					>
-						<div
-							dangerouslySetInnerHTML={{
-								__html: svgContent.replace('<svg', '<svg fill="currentColor"'),
-							}}
+						<button
+							onClick={() => setIsColored(!isColored)}
 							className={cn(
-								'transition-all duration-200 w-full h-full',
-								isHovered && 'opacity-75',
-							)}
-							style={{pointerEvents: 'none'}}
-						/>
-						{isHovered && (
-							<div
-								className={cn(
-									'absolute inset-0 flex items-center justify-center',
-									'bg-black/60 backdrop-blur-[1px]',
-									'rounded-sm',
-									'text-white pointer-events-none',
-									'animate-in fade-in-0 duration-200',
-								)}
-							>
-								<Copy
-									size={isCompact ? 24 : 40}
-									className="animate-in zoom-in-50 duration-200"
-								/>
-							</div>
-						)}
-					</div>
-				</div>
-			</div>
-
-			{!isCompact && (
-				<div
-					className={cn(
-						'flex items-center',
-						'transition-colors duration-200',
-						getLuminance(icon.hex) > 0.5 ? 'text-gray-900' : 'text-white',
-					)}
-					style={{
-						backgroundColor: `#${icon.hex}`,
-					}}
-				>
-					<button
-						onClick={() => setIsColored(!isColored)}
-						className={cn(
-							'flex-1 flex items-center justify-between',
-							'px-3 py-1.5 text-xs font-medium',
-							'transition-colors duration-200 hover:bg-black/5',
-						)}
-					>
-						<span className="flex items-center gap-1.5">
-							<div
-								className={cn(
-									'w-2 h-2 rounded-full border',
-									getLuminance(icon.hex) > 0.5
-										? 'border-black/10'
-										: 'border-white/10',
-								)}
-								style={{backgroundColor: `#${icon.hex}`}}
-							/>
-							#{icon.hex}
-						</span>
-						<div
-							onClick={copyHexToClipboard}
-							className={cn(
-								'w-5 h-5 rounded-full',
-								'flex items-center justify-center',
-								'bg-white/10 backdrop-blur-[1px]',
-								'hover:bg-white/20',
-								'transition-all duration-200',
-								isCopied && 'scale-110 bg-white/30',
+								'flex-1 flex items-center justify-between',
+								'px-3 py-1.5 text-xs font-medium',
+								'transition-colors duration-200 hover:bg-black/5',
 							)}
 						>
-							{isCopied ? <Check size={12} /> : <Copy size={12} />}
-						</div>
-					</button>
-				</div>
-			)}
-		</div>
+							<span className="flex items-center gap-1.5">
+								<div
+									className={cn(
+										'w-2 h-2 rounded-full border',
+										getLuminance(icon.hex) > 0.5
+											? 'border-black/10'
+											: 'border-white/10',
+									)}
+									style={{backgroundColor: `#${icon.hex}`}}
+								/>
+								#{icon.hex}
+							</span>
+							<div
+								onClick={copyHexToClipboard}
+								className={cn(
+									'w-5 h-5 rounded-full',
+									'flex items-center justify-center',
+									'bg-white/10 backdrop-blur-[1px]',
+									'hover:bg-white/20',
+									'transition-all duration-200',
+									isCopied && 'scale-110 bg-white/30',
+								)}
+							>
+								{isCopied ? <Check size={12} /> : <Copy size={12} />}
+							</div>
+						</button>
+					</div>
+				)}
+			</div>
+			<IconAnalysis
+				icon={icon}
+				isOpen={isAnalysisOpen}
+				onClose={() => setIsAnalysisOpen(false)}
+			/>
+		</>
 	);
 }
