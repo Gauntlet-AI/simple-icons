@@ -140,7 +140,7 @@ export function IconPreview({icon, isCompact}) {
 									'animate-in fade-in-0 duration-200',
 								)}
 							>
-								<Maximize2
+								<Copy
 									size={40}
 									className="animate-in zoom-in-50 duration-200"
 								/>
