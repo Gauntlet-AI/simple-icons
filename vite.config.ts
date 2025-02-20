@@ -9,6 +9,13 @@ export default defineConfig({
 		port: 3000,
 		open: true,
 	},
+	build: {
+		outDir: 'dist',
+		sourcemap: true,
+		assetsDir: 'assets',
+		emptyOutDir: true,
+	},
+	base: './',
 	define: {
 		// Add any needed environment variables here
 		__DEFINES__: JSON.stringify({}),
