@@ -2,7 +2,13 @@
 	title: '%s',
 	slug: '%s',
 	get svg() {
-		return a + '%s' + b + this.path + c;
+		const textColor = this.hex.match(/^(?:[0-9a-fA-F]{3}){1,2}$/)?.[0].toUpperCase();
+		const brightness = parseInt(textColor, 16);
+		const r = brightness >> 16;
+		const g = (brightness >> 8) & 255;
+		const b = brightness & 255;
+		const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+		return a + '%s' + b + this.path + c + this.hex + d + (luminance > 0.5 ? '#000' : '#FFF') + e + this.hex + f;
 	},
 	path: '%s',
 	source: '%s',

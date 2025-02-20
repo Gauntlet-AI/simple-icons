@@ -63,12 +63,79 @@ const TITLE_TO_SLUG_REPLACEMENTS = {
 	Ž: 'z',
 };
 
+/** @typedef {import('../types').SimpleIcon} Icon */
+
 /**
- * @typedef {object} Icon
- * @property {string} title - The icon title.
- * @property {string} slug - The icon slug.
- * @property {string} hex - The icon hex color.
+ * @param {{ icon: Icon }} props
  */
+function IconPreview({ icon }) {
+	const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
+	return (
+		<div className="icon-preview" style={{ 
+			display: 'flex',
+			flexDirection: 'column',
+			height: '100%'
+		}}>
+			<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+				<img
+					src={iconPath}
+					alt={icon.title}
+					width="48"
+					height="48"
+					onError={(e) => {
+						const img = e.target;
+						if (img instanceof HTMLImageElement) {
+							console.error(`Failed to load icon: ${iconPath}`, {
+								element: img,
+								currentSrc: img.currentSrc,
+								naturalWidth: img.naturalWidth,
+								complete: img.complete,
+							});
+						}
+					}}
+					style={{ filter: 'invert(1)' }}
+					onLoad={(e) => {
+						const img = e.target;
+						if (img instanceof HTMLImageElement) {
+							console.log(`Successfully loaded icon: ${iconPath}`, {
+								naturalWidth: img.naturalWidth,
+								naturalHeight: img.naturalHeight,
+							});
+						}
+					}}
+				/>
+			</div>
+			<div className="icon-title" style={{ padding: '8px', textAlign: 'center' }}>
+				{icon.title}
+			</div>
+			<div style={{
+				borderTop: '1px solid #eee',
+				padding: '8px',
+				display: 'flex',
+				alignItems: 'center',
+				gap: '8px'
+			}}>
+				<div style={{
+					backgroundColor: `#${icon.hex}`,
+					padding: '2px 4px',
+					borderRadius: '2px',
+					fontSize: '10px',
+					color: getLuminance(icon.hex) > 0.5 ? '#000' : '#fff',
+				}}>
+					#{icon.hex}
+				</div>
+				{/* Add other footer elements here */}
+			</div>
+		</div>
+	);
+}
+
+function getLuminance(hex) {
+	const r = parseInt(hex.slice(0, 2), 16);
+	const g = parseInt(hex.slice(2, 4), 16);
+	const b = parseInt(hex.slice(4, 6), 16);
+	return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
 
 /**
  *
@@ -264,37 +331,11 @@ function App() {
 				className="search-input"
 			/>
 			<div className="icons-grid">
-				{filteredIcons.map((icon) => {
-					const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
-					return (
-						<div key={icon.slug} className="icon-card">
-							<div className="icon-preview" style={{color: `#${icon.hex}`}}>
-								<img
-									src={iconPath}
-									alt={icon.title}
-									width="48"
-									height="48"
-									onError={(e) => {
-										console.error(`Failed to load icon: ${iconPath}`, {
-											element: e.target,
-											currentSrc: e.target.currentSrc,
-											naturalWidth: e.target.naturalWidth,
-											complete: e.target.complete,
-										});
-									}}
-									style={{filter: 'invert(1)'}}
-									onLoad={(e) => {
-										console.log(`Successfully loaded icon: ${iconPath}`, {
-											naturalWidth: e.target.naturalWidth,
-											naturalHeight: e.target.naturalHeight,
-										});
-									}}
-								/>
-							</div>
-							<div className="icon-title">{icon.title}</div>
-						</div>
-					);
-				})}
+				{filteredIcons.map((icon) => (
+					<div key={icon.slug} className="icon-card">
+						<IconPreview icon={icon} />
+					</div>
+				))}
 			</div>
 		</div>
 	);

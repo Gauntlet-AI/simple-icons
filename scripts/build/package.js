@@ -142,7 +142,7 @@ const build = async () => {
 	}
 
 	// Constants used in templates to reduce package size
-	const constantsString = `const a='<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>',b='</title><path d="',c='"/></svg>';`;
+	const constantsString = `const a='<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>',b='</title><path d="',c='"/><rect x="0" y="19" width="7.5" height="5" fill="#',d='"/><text x="3.75" y="22.5" font-family="monospace" font-size="2.5px" fill="',e='" text-anchor="middle">#',f='</text></svg>';`;
 
 	// Write our file containing the exports of all icons in CommonJS ...
 	const rawIndexJs = `${constantsString}module.exports={${iconsBarrelJs.join(
