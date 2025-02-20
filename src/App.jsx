@@ -66,42 +66,75 @@ const TITLE_TO_SLUG_REPLACEMENTS = {
 /** @typedef {import('../types').SimpleIcon} Icon */
 
 /**
+ * Convert a hex color to RGB values
+ * @param {string} hex
+ * @returns {{r: number, g: number, b: number}}
+ */
+function hexToRgb(hex) {
+	const r = parseInt(hex.slice(0, 2), 16);
+	const g = parseInt(hex.slice(2, 4), 16);
+	const b = parseInt(hex.slice(4, 6), 16);
+	return { r, g, b };
+}
+
+/**
+ * Create a CSS filter to convert black to target hex color
+ * @param {string} hex Hex color without # prefix
+ * @returns {string} CSS filter string
+ */
+function createColorFilter(hex) {
+	const { r, g, b } = hexToRgb(hex);
+	// Convert RGB to HSL-like values for filter
+	const brightness = (r + g + b) / (255 * 3);
+	const saturation = Math.max(r, g, b) / 255;
+	
+	return `brightness(0) saturate(100%) invert(${brightness}) sepia(100%) saturate(${saturation * 1000}%) hue-rotate(${Math.atan2(b - r, g - r) * 180 / Math.PI}deg)`;
+}
+
+/**
  * @param {{ icon: Icon }} props
  */
 function IconPreview({ icon }) {
+	const [isColored, setIsColored] = useState(false);
+	const [svgContent, setSvgContent] = useState('');
 	const iconPath = `/icons/${encodeURIComponent(icon.slug)}.svg`;
+
+	const copyHexToClipboard = (e) => {
+		e.stopPropagation(); // Prevent triggering the color toggle
+		navigator.clipboard.writeText(`#${icon.hex}`);
+	};
+
+	useEffect(() => {
+		fetch(iconPath)
+			.then(response => response.text())
+			.then(text => {
+				setSvgContent(text);
+			})
+			.catch(error => {
+				console.error(`Failed to load icon: ${iconPath}`, error);
+			});
+	}, [iconPath]);
+
 	return (
 		<div className="icon-preview" style={{ 
 			display: 'flex',
 			flexDirection: 'column',
 			height: '100%'
 		}}>
-			<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-				<img
-					src={iconPath}
-					alt={icon.title}
-					width="48"
-					height="48"
-					onError={(e) => {
-						const img = e.target;
-						if (img instanceof HTMLImageElement) {
-							console.error(`Failed to load icon: ${iconPath}`, {
-								element: img,
-								currentSrc: img.currentSrc,
-								naturalWidth: img.naturalWidth,
-								complete: img.complete,
-							});
-						}
+			<div style={{ 
+				flex: 1, 
+				display: 'flex', 
+				alignItems: 'center', 
+				justifyContent: 'center'
+			}}>
+				<div 
+					style={{ 
+						width: '48px',
+						height: '48px',
+						color: isColored ? `#${icon.hex}` : '#FFFFFF'
 					}}
-					style={{ filter: 'invert(1)' }}
-					onLoad={(e) => {
-						const img = e.target;
-						if (img instanceof HTMLImageElement) {
-							console.log(`Successfully loaded icon: ${iconPath}`, {
-								naturalWidth: img.naturalWidth,
-								naturalHeight: img.naturalHeight,
-							});
-						}
+					dangerouslySetInnerHTML={{ 
+						__html: svgContent.replace('<svg', '<svg fill="currentColor"')
 					}}
 				/>
 			</div>
@@ -110,21 +143,50 @@ function IconPreview({ icon }) {
 			</div>
 			<div style={{
 				borderTop: '1px solid #eee',
-				padding: '8px',
+				padding: '8px 4px 4px 4px',
 				display: 'flex',
 				alignItems: 'center',
 				gap: '8px'
 			}}>
-				<div style={{
-					backgroundColor: `#${icon.hex}`,
-					padding: '2px 4px',
-					borderRadius: '2px',
-					fontSize: '10px',
-					color: getLuminance(icon.hex) > 0.5 ? '#000' : '#fff',
-				}}>
-					#{icon.hex}
+				<div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+					<div 
+						onClick={() => setIsColored(!isColored)}
+						style={{
+							backgroundColor: isColored ? '#FFFFFF20' : `#${icon.hex}`,
+							padding: '6px 6px',
+							borderRadius: '4px',
+							fontSize: '14px',
+							fontWeight: '500',
+							color: isColored ? '#000000' : (getLuminance(icon.hex) > 0.5 ? '#000' : '#fff'),
+							cursor: 'pointer',
+							transition: 'all 0.2s ease',
+							flex: 1,
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'space-between',
+							gap: '8px'
+						}}
+					>
+						<span>#{icon.hex}</span>
+						<div
+							onClick={copyHexToClipboard}
+							style={{
+								width: '20px',
+								height: '20px',
+								borderRadius: '50%',
+								border: '1px solid currentColor',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								cursor: 'pointer',
+								fontSize: '12px',
+								opacity: 0.8
+							}}
+						>
+							⎘
+						</div>
+					</div>
 				</div>
-				{/* Add other footer elements here */}
 			</div>
 		</div>
 	);
