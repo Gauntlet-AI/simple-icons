@@ -1,11 +1,4 @@
-import OpenAI from 'openai';
 import Replicate from 'replicate';
-
-// Initialize the OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.OPEN_AI_KEY,
-  dangerouslyAllowBrowser: true  // Note: For production, use a backend server instead
-});
 
 // Initialize the Replicate client for CLIP
 const replicate = new Replicate({

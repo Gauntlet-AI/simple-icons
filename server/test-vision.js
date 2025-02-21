@@ -13,7 +13,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPEN_AI_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 async function testVisionAPI() {
@@ -47,7 +47,7 @@ async function testVisionAPI() {
     const dataUrl = `data:image/png;base64,${base64Image}`;
     
     console.log('Making Vision API request...');
-    console.log('Using API Key:', process.env.OPEN_AI_KEY ? 'Present' : 'Missing');
+    console.log('Using API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
     console.log('Brand Color:', brandColor);
     
     const response = await openai.chat.completions.create({

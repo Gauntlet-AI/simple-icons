@@ -15,7 +15,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Initialize API clients
 const openai = new OpenAI({
-  apiKey: process.env.OPEN_AI_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 const app = express();

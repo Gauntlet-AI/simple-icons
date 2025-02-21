@@ -12,21 +12,26 @@ export default defineConfig({
 			async buildStart() {
 				// Ensure directories exist
 				if (!fs.existsSync('public/icons')) {
-					fs.mkdirSync('public/icons', { recursive: true });
+					fs.mkdirSync('public/icons', {recursive: true});
 				}
 				if (!fs.existsSync('public/_data')) {
-					fs.mkdirSync('public/_data', { recursive: true });
+					fs.mkdirSync('public/_data', {recursive: true});
 				}
 
 				// Copy SVG files
-				const svgFiles = fs.readdirSync('icons').filter(file => file.endsWith('.svg'));
+				const svgFiles = fs
+					.readdirSync('icons')
+					.filter((file) => file.endsWith('.svg'));
 				for (const file of svgFiles) {
 					fs.copyFileSync(`icons/${file}`, `public/icons/${file}`);
 				}
 
 				// Copy JSON data
 				if (fs.existsSync('_data/simple-icons.json')) {
-					fs.copyFileSync('_data/simple-icons.json', 'public/_data/simple-icons.json');
+					fs.copyFileSync(
+						'_data/simple-icons.json',
+						'public/_data/simple-icons.json',
+					);
 				}
 			},
 		},
