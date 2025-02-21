@@ -17,14 +17,25 @@ function getLuminance(hex) {
 }
 
 /**
- * @param {{ icon: import('../../types').SimpleIcon & { forceColored?: boolean }, isCompact?: boolean }} props
+ * @param {{ 
+ *   icon: import('../../types').SimpleIcon & { forceColored?: boolean },
+ *   isCompact?: boolean,
+ *   isAnalysisOpen?: boolean,
+ *   onAnalysisOpen?: () => void,
+ *   onAnalysisClose?: () => void
+ * }} props
  */
-export function IconPreview({icon, isCompact}) {
+export function IconPreview({
+	icon,
+	isCompact,
+	isAnalysisOpen = false,
+	onAnalysisOpen = () => {},
+	onAnalysisClose = () => {}
+}) {
 	const [isColored, setIsColored] = useState(false);
 	const [svgContent, setSvgContent] = useState('');
 	const [isCopied, setIsCopied] = useState(false);
 	const [isHovered, setIsHovered] = useState(false);
-	const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 	const {showToast} = useToast();
 	/** @type {React.MutableRefObject<NodeJS.Timeout | null>} */
 	const hoverTimeoutReference = React.useRef(null);
@@ -115,7 +126,7 @@ export function IconPreview({icon, isCompact}) {
 							{icon.title}
 						</div>
 						<button
-							onClick={() => setIsAnalysisOpen(true)}
+							onClick={onAnalysisOpen}
 							className="px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200"
 							title="AI Analysis"
 						>
@@ -125,7 +136,10 @@ export function IconPreview({icon, isCompact}) {
 				)}
 
 				<div className={cn('flex-1', isCompact ? 'p-0' : 'p-0.5 py-3')}>
-					<div className="flex items-center justify-center h-full">
+					<div className={cn(
+						'h-full',
+						!isCompact && 'flex items-center justify-center'
+					)}>
 						<div
 							className={cn(
 								'relative cursor-pointer',
@@ -224,7 +238,7 @@ export function IconPreview({icon, isCompact}) {
 			<IconAnalysis
 				icon={icon}
 				isOpen={isAnalysisOpen}
-				onClose={() => setIsAnalysisOpen(false)}
+				onClose={onAnalysisClose}
 			/>
 		</>
 	);

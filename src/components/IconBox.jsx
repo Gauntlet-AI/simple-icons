@@ -1,4 +1,4 @@
-import {BookOpen} from 'lucide-react';
+import {BookOpen, Sparkles} from 'lucide-react';
 import React from 'react';
 import {cn} from '../lib/utils.js';
 import {IconPreview} from './IconPreview';
@@ -6,14 +6,16 @@ import {IconPreview} from './IconPreview';
 /**
  * @param {{
  *   icon: import('../../types').SimpleIcon & { forceColored?: boolean },
- *   isCompact?: boolean
+ *   isCompact?: boolean,
+ *   showAiButton?: boolean
  * }} props
  */
-export function IconBox({icon, isCompact}) {
+export function IconBox({icon, isCompact, showAiButton = true}) {
 	const [showLicenseTooltip, setShowLicenseTooltip] = React.useState(false);
 	const [localColored, setLocalColored] = React.useState(
 		icon.forceColored || false,
 	);
+	const [isAnalysisOpen, setIsAnalysisOpen] = React.useState(false);
 
 	// Keep local state in sync with prop
 	React.useEffect(() => {
@@ -38,15 +40,40 @@ export function IconBox({icon, isCompact}) {
 			<IconPreview
 				icon={{...icon, forceColored: localColored}}
 				isCompact={isCompact}
+				isAnalysisOpen={isAnalysisOpen}
+				onAnalysisOpen={() => setIsAnalysisOpen(true)}
+				onAnalysisClose={() => setIsAnalysisOpen(false)}
 				className={isCompact ? 'w-full h-full' : undefined}
 			/>
 			{isCompact ? (
-				<button
-					onClick={toggleColor}
-					className="absolute bottom-1 left-1 w-4 h-4 rounded-full border border-black/20 dark:border-white/20 transition-transform hover:scale-110 shadow-sm"
-					style={{backgroundColor: `#${icon.hex}`}}
-					title={`Click to ${localColored ? 'remove' : 'apply'} color`}
-				/>
+				<>
+					<button
+						onClick={toggleColor}
+						className="absolute bottom-1 left-1 w-4 h-4 rounded-full border border-black/20 dark:border-white/20 transition-transform hover:scale-110 shadow-sm"
+						style={{backgroundColor: `#${icon.hex}`}}
+						title={`Click to ${localColored ? 'remove' : 'apply'} color`}
+					/>
+					{showAiButton && (
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								setIsAnalysisOpen(true);
+							}}
+							className={cn(
+								'absolute bottom-1 right-1',
+								'w-4 h-4 rounded-full',
+								'flex items-center justify-center',
+								'bg-white',
+								'border border-black/50 dark:border-black',
+								'transition-all duration-200 hover:scale-110',
+								'shadow-sm'
+							)}
+							title="AI Analysis"
+						>
+							<Sparkles size={10} className="text-black" />
+						</button>
+					)}
+				</>
 			) : (
 				<div className="absolute bottom-[calc(2.5rem+1px)] right-1.5 flex flex-col gap-1">
 					{icon.guidelines && (

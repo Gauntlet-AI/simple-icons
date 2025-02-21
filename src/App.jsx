@@ -1,5 +1,5 @@
 // @ts-check
-import {ChevronDown, ChevronRight, Grid, LayoutGrid, Maximize2, Paintbrush, X} from 'lucide-react';
+import {ChevronDown, ChevronRight, Grid, LayoutGrid, Maximize2, Paintbrush, X, Sparkles} from 'lucide-react';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {IconBox} from './components/IconBox';
 import {Button} from './components/ui/button.jsx';
@@ -205,10 +205,12 @@ function App() {
 	const [isColoringAll, setIsColoringAll] = useState(false);
 	const [coloredIconsCount, setColoredIconsCount] = useState(0);
 	const [isCompactView, setIsCompactView] = useState(false);
+	const [lastColoredIndex, setLastColoredIndex] = useState(0);
 	const [isViewTransitioning, setIsViewTransitioning] = useState(false);
 	const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
 	const [selectedTags, setSelectedTags] = useState(/** @type {string[]} */ ([]));
 	const [expandedCategories, setExpandedCategories] = useState(/** @type {string[]} */ ([]));
+	const [showAiButtons, setShowAiButtons] = useState(true);
 	const cancelColoringReference = useRef(false);
 
 	// Lazy loading related states
@@ -331,9 +333,9 @@ function App() {
 	const memoizedIcons = useMemo(
 		() =>
 			visibleIcons.map((icon) => (
-				<IconBox key={icon.slug} icon={icon} isCompact={isCompactView} />
+				<IconBox key={icon.slug} icon={icon} isCompact={isCompactView} showAiButton={showAiButtons} />
 			)),
-		[visibleIcons, isCompactView],
+		[visibleIcons, isCompactView, showAiButtons],
 	);
 
 	// Intersection Observer setup
@@ -399,20 +401,21 @@ function App() {
 		if (isColoringAll) {
 			cancelColoringReference.current = true;
 			setIsColoringAll(false);
-			// Reset all icons to uncolored state when canceling
-			setFilteredIcons((icons) =>
-				icons.map((icon) => ({...icon, forceColored: false})),
-			);
-			setColoredIconsCount(0);
 			return;
 		}
 
 		setIsColoringAll(true);
 		cancelColoringReference.current = false;
-		setColoredIconsCount(0);
+
+		// Count already colored icons up to lastColoredIndex
+		const alreadyColoredCount = filteredIcons
+			.slice(0, lastColoredIndex)
+			.filter(icon => icon.forceColored)
+			.length;
+		setColoredIconsCount(alreadyColoredCount);
 
 		processIconChunk(
-			0,
+			lastColoredIndex,
 			filteredIcons,
 			10,
 			(updatedIcons) => {
@@ -420,11 +423,35 @@ function App() {
 				if (cancelColoringReference.current) {
 					setIsColoringAll(false);
 				}
+				// Check if we're done
+				if (lastColoredIndex >= filteredIcons.length) {
+					setIsColoringAll(false);
+					cancelColoringReference.current = true;
+				}
 			},
-			(count) => setColoredIconsCount((previous) => previous + count),
+			(count) => {
+				setColoredIconsCount((previous) => previous + count);
+				setLastColoredIndex((prev) => {
+					const newIndex = Math.min(prev + 10, filteredIcons.length);
+					// If we've reached the end, stop the process
+					if (newIndex >= filteredIcons.length) {
+						setIsColoringAll(false);
+						cancelColoringReference.current = true;
+					}
+					return newIndex;
+				});
+			},
 			() => cancelColoringReference.current,
 		);
 	};
+
+	// Reset progress when search term or filters change
+	useEffect(() => {
+		setLastColoredIndex(0);
+		setColoredIconsCount(0);
+		setIsColoringAll(false);
+		cancelColoringReference.current = true;
+	}, [searchTerm, selectedTags]);
 
 	const handleViewChange = () => {
 		setIsViewTransitioning(true);
@@ -596,21 +623,48 @@ function App() {
 								<Grid className="h-4 w-4" />
 							)}
 						</Button>
+						{isCompactView && (
+							<Button
+								variant={showAiButtons ? 'secondary' : 'outline'}
+								size="icon"
+								onClick={() => setShowAiButtons(!showAiButtons)}
+								className="relative"
+								title={showAiButtons ? "Hide AI buttons" : "Show AI buttons"}
+							>
+								<Sparkles className="h-4 w-4" />
+							</Button>
+						)}
 						<Button
 							variant="outline"
 							size="icon"
 							onClick={startColoringAll}
-							disabled={isColoringAll}
-							className="relative"
+							disabled={isColoringAll && cancelColoringReference.current}
+							className="relative transition-all duration-200"
 						>
-							<Paintbrush className="h-4 w-4" />
-							{isColoringAll && (
+							<div 
+								className="transition-transform duration-1000 ease-in-out"
+								style={{
+									animation: isColoringAll ? 'breathe 2s ease-in-out infinite' : undefined,
+								}}
+							>
+								<Paintbrush className="h-4 w-4" />
+							</div>
+							<style>{`
+								@keyframes breathe {
+									0%, 100% { transform: scale(0.9); }
+									50% { transform: scale(1.1); }
+								}
+							`}</style>
+							{(isColoringAll || coloredIconsCount > 0) && (
 								<svg
 									className="absolute inset-0 -rotate-90"
 									viewBox="0 0 32 32"
 								>
 									<circle
-										className="text-primary"
+										className={cn(
+											"transition-all duration-200",
+											isColoringAll ? "text-primary" : "text-primary/50"
+										)}
 										strokeWidth="3"
 										stroke="currentColor"
 										fill="none"
