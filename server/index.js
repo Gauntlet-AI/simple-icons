@@ -80,11 +80,11 @@ app.post('/api/analyze-icon', async (req, res) => {
       model: "gpt-4-turbo",
       messages: [{
         role: "system",
-        content: "You are an expert design critic. Analyze icons in terms of their visual elements, symbolism, and effectiveness. Format your response in markdown with appropriate headings, bullet points, and emphasis where relevant."
+        content: "You are a concise design critic. Analyze icons focusing on key visual elements and effectiveness. Keep each point brief but insightful. Use markdown formatting."
       }, {
         role: "user",
         content: [
-          { type: "text", text: "Analyze this icon in terms of its design elements, visual style, and effectiveness as a brand symbol. Structure your response with sections for Visual Elements, Style, and Brand Effectiveness." },
+          { type: "text", text: "Analyze this icon's design elements and effectiveness as a brand symbol. Focus on the most important aspects." },
           { 
             type: "image_url",
             image_url: {
@@ -94,55 +94,68 @@ app.post('/api/analyze-icon', async (req, res) => {
           }
         ]
       }],
-      max_tokens: 250,
+      max_tokens: 500,
+      temperature: 0.7,
     });
 
-    // Calculate a design score based on certain keywords in the analysis
-    const analysis = iconResponse.choices[0].message.content;
-    const positiveKeywords = ['clean', 'simple', 'minimal', 'modern', 'effective', 'balanced', 'professional', 'distinctive', 'memorable', 'elegant'];
-    const negativeKeywords = ['busy', 'complex', 'cluttered', 'confusing', 'unclear', 'amateur', 'unbalanced', 'generic'];
-    
-    let score = 70; // Base score
-    const foundPositive = [];
-    const foundNegative = [];
-    
-    positiveKeywords.forEach(keyword => {
-      if (analysis.toLowerCase().includes(keyword)) {
-        score += 3;
-        foundPositive.push(keyword);
-      }
-    });
-    negativeKeywords.forEach(keyword => {
-      if (analysis.toLowerCase().includes(keyword)) {
-        score -= 5;
-        foundNegative.push(keyword);
-      }
-    });
-    
-    // Ensure score stays within 0-100 range
-    score = Math.max(0, Math.min(100, score));
-
-    // Generate score explanation
-    let scoreExplanation = '';
-    if (foundPositive.length > 0) {
-      scoreExplanation += `Positive aspects include being ${foundPositive.slice(0, -1).join(', ')}${foundPositive.length > 1 ? ' and ' : ''}${foundPositive.slice(-1)[0]}. `;
-    }
-    if (foundNegative.length > 0) {
-      scoreExplanation += `Areas for improvement: the design appears ${foundNegative.slice(0, -1).join(', ')}${foundNegative.length > 1 ? ' and ' : ''}${foundNegative.slice(-1)[0]}. `;
-    }
-    if (foundPositive.length === 0 && foundNegative.length === 0) {
-      scoreExplanation = 'This icon has a balanced design with no strongly positive or negative characteristics.';
-    }
+    const productDescription = descriptionResponse.choices[0].message.content;
+    const iconAnalysis = iconResponse.choices[0].message.content;
 
     res.json({
-      productDescription: descriptionResponse.choices[0].message.content,
-      iconAnalysis: analysis,
-      designScore: score,
-      scoreExplanation
+      productDescription,
+      iconAnalysis,
     });
 
   } catch (error) {
     console.error('Error in icon analysis:', error);
+    res.status(500).json({ 
+      error: 'API Error',
+      details: error.message 
+    });
+  }
+});
+
+// New endpoint for generating design score
+app.post('/api/analyze-score', async (req, res) => {
+  try {
+    const { productDescription, iconAnalysis } = req.body;
+
+    const scoreResponse = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [{
+        role: "system",
+        content: "You are a design critic focused on evaluating logos based on two key criteria: Memorability (ease of recognition and clarity) and Relevance (connection to the product/audience). Provide a score out of 100 and a brief 1-2 sentence explanation."
+      }, {
+        role: "user",
+        content: `Based on this product description and icon analysis, score the logo's effectiveness:
+
+Product Description: ${productDescription}
+
+Icon Analysis: ${iconAnalysis}
+
+Focus on:
+1. Memorability: Is it easy to recognize and uncluttered?
+2. Relevance: Is the logo relevant to the target audience/product?
+
+Respond with only a JSON object containing:
+{
+  "score": number,
+  "explanation": "1-2 sentence explanation"
+}`
+      }],
+      temperature: 0.7,
+      max_tokens: 150,
+    });
+
+    const scoreData = JSON.parse(scoreResponse.choices[0].message.content);
+
+    res.json({
+      designScore: scoreData.score,
+      scoreExplanation: scoreData.explanation
+    });
+
+  } catch (error) {
+    console.error('Error in score analysis:', error);
     res.status(500).json({ 
       error: 'API Error',
       details: error.message 
