@@ -4,5 +4,14 @@
 	"installCommand": "npm install",
 	"framework": "vite",
 	"outputDirectory": "dist",
-	"rewrites": [{"source": "/(.*)", "destination": "/"}]
+	"rewrites": [
+		{
+			"source": "/api/(.*)",
+			"destination": "/api/$1"
+		},
+		{
+			"source": "/(.*)",
+			"destination": "/"
+		}
+	]
 }

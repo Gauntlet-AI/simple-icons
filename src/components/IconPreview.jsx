@@ -1,8 +1,8 @@
 import {Check, Copy, Maximize2, Sparkles} from 'lucide-react';
 import React, {useEffect, useState} from 'react';
 import {cn} from '../lib/utils.js';
-import {useToast} from './ui/toast-context';
 import {IconAnalysis} from './IconAnalysis';
+import {useToast} from './ui/toast-context';
 
 /**
  * Calculate the relative luminance of a hex color.
@@ -85,8 +85,11 @@ export function IconPreview({icon, isCompact}) {
 		fetch(iconPath)
 			.then((response) => {
 				if (!response.ok) {
-					throw new Error(`Failed to load icon: ${response.status} ${response.statusText}`);
+					throw new Error(
+						`Failed to load icon: ${response.status} ${response.statusText}`,
+					);
 				}
+
 				return response.text();
 			})
 			.then((text) => {
@@ -139,7 +142,10 @@ export function IconPreview({icon, isCompact}) {
 						>
 							<div
 								dangerouslySetInnerHTML={{
-									__html: svgContent.replace('<svg', '<svg fill="currentColor"'),
+									__html: svgContent.replace(
+										'<svg',
+										'<svg fill="currentColor"',
+									),
 								}}
 								className={cn(
 									'transition-all duration-200 w-full h-full',
