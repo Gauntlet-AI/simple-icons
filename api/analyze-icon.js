@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import OpenAI from 'openai';
 import sharp from 'sharp';
 
@@ -37,21 +35,31 @@ export default async function handler(request, response) {
       });
     }
 
-    // Read both the SVG file and icon data
-    const [svgBuffer, iconDataText] = await Promise.all([
-      fs.readFile(path.join(process.cwd(), svgPath)),
-      fs.readFile(path.join(process.cwd(), '_data/simple-icons.json'), 'utf8'),
+    // Get the base URL from the request
+    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    const baseUrl = `${protocol}://${request.headers.host}`;
+
+    // Fetch SVG and JSON data from public URLs
+    const [svgResponse, iconDataResponse] = await Promise.all([
+      fetch(`${baseUrl}${svgPath}`),
+      fetch(`${baseUrl}/_data/simple-icons.json`)
     ]);
 
-    // Parse icon data and find the matching icon
-    const icons = JSON.parse(iconDataText);
-    const icon = icons.find(
+    if (!svgResponse.ok || !iconDataResponse.ok) {
+      throw new Error('Failed to fetch required files');
+    }
+
+    const svgBuffer = await svgResponse.arrayBuffer();
+    const iconData = await iconDataResponse.json();
+
+    // Find the matching icon
+    const icon = iconData.find(
       (i) => i.title.toLowerCase() === title.toLowerCase(),
     );
     const brandColor = icon ? `#${icon.hex}` : '#000000';
 
     // Convert SVG to PNG using Sharp with brand color
-    const pngBuffer = await sharp(svgBuffer)
+    const pngBuffer = await sharp(Buffer.from(svgBuffer))
       .resize(512, 512)
       .png()
       .flatten({ background: '#ffffff' })

@@ -19,9 +19,5 @@
 			"source": "/(.*)",
 			"destination": "/"
 		}
-	],
-	"files": [
-		"icons/**/*.svg",
-		"_data/simple-icons.json"
 	]
 }
