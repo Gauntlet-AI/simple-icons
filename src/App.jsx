@@ -427,7 +427,7 @@ function App() {
 	if (error) {
 		return (
 			<div className="container">
-				<h1>Simple Icons Development Environment</h1>
+				<h1>Icon Study</h1>
 				<div className="error-message">
 					Error loading icons: {error}
 					<br />
@@ -440,7 +440,7 @@ function App() {
 	if (isLoading) {
 		return (
 			<div className="container">
-				<h1>Simple Icons Development Environment</h1>
+				<h1>Icon Study</h1>
 				<div className="loading-message">Loading icons...</div>
 			</div>
 		);
@@ -458,7 +458,7 @@ function App() {
 				<div className="container py-10 space-y-8">
 					<div className="space-y-2">
 						<h1 className="text-3xl font-bold tracking-tight">
-							Simple Icons Development Environment
+							Icon Study
 						</h1>
 						<p className="text-muted-foreground">Loaded {icons.length} icons</p>
 					</div>
