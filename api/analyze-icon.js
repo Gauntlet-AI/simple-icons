@@ -126,7 +126,7 @@ export default async function handler(request, response) {
       iconAnalysis,
     });
   } catch (error) {
-    console.error('Error in icon analysis:', error);
+    console.error('Error in icon analysis(!):', error);
     response.status(500).json({
       error: 'API Error',
       details: error.message,
