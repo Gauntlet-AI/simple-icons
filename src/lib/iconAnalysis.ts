@@ -5,6 +5,7 @@ const replicate = new Replicate({
 	auth: import.meta.env.VITE_REPLICATE_API_TOKEN,
 });
 
+// Use port 3001 in development, otherwise use the environment variable or production URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 type IconAnalysis = {
