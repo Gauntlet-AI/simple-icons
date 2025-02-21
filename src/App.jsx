@@ -1,5 +1,5 @@
 // @ts-check
-import {Grid, LayoutGrid, Maximize2, Paintbrush} from 'lucide-react';
+import {ChevronDown, ChevronRight, Grid, LayoutGrid, Maximize2, Paintbrush, X} from 'lucide-react';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {IconBox} from './components/IconBox';
 import {Button} from './components/ui/button.jsx';
@@ -71,7 +71,7 @@ const TITLE_TO_SLUG_REPLACEMENTS = {
 	Ž: 'z',
 };
 
-/** @typedef {import('../types').SimpleIcon & { forceColored?: boolean }} Icon */
+/** @typedef {import('../types').SimpleIcon & { forceColored?: boolean, industry?: string[] }} Icon */
 
 /**
  * Process a chunk of icons for coloring.
@@ -140,15 +140,65 @@ const generateIconSlug = (title) => {
 		.replaceAll(/\s+/g, ''); // Remove spaces
 };
 
+/** @type {Record<string, string[]>} */
+const INDUSTRY_CATEGORIES = {
+	"Manufacturing": [
+		"Computer and Electronic Product Manufacturing",
+		"Electrical Equipment, Appliance, and Component Manufacturing",
+		"Food Manufacturing",
+		"Machinery Manufacturing",
+		"Transportation Equipment Manufacturing",
+		"Chemical Manufacturing",
+		"Fabricated Metal Product Manufacturing",
+		"Primary Metal Manufacturing",
+	],
+	"Technology & Services": [
+		"Data Processing, Hosting, and Related Services",
+		"Software Publishers",
+		"Professional, Scientific, and Technical Services",
+		"Information Security",
+		"Computer Systems Design",
+		"Internet Publishing and Broadcasting",
+	],
+	"Telecommunications & Media": [
+		"Telecommunications",
+		"Broadcasting (except Internet)",
+		"Motion Picture and Sound Recording Industries",
+		"Publishing Industries (except Internet)",
+	],
+	"Commerce & Retail": [
+		"Electronic Shopping and Mail-Order Houses",
+		"Electronics and Appliance Stores",
+		"Merchant Wholesalers, Durable Goods",
+		"Merchant Wholesalers, Nondurable Goods",
+		"Nonstore Retailers",
+	],
+	"Financial Services": [
+		"Credit Intermediation and Related Activities",
+		"Securities, Commodity Contracts, and Other Financial Investments",
+		"Insurance Carriers and Related Activities",
+		"Funds, Trusts, and Other Financial Vehicles",
+		"Monetary Authorities-Central Bank",
+	],
+	"Transportation & Logistics": [
+		"Air Transportation",
+		"Rail Transportation",
+		"Water Transportation",
+		"Truck Transportation",
+		"Transit and Ground Passenger Transportation",
+		"Pipeline Transportation",
+		"Warehousing and Storage",
+	],
+	"Other Industries": [] // This will catch any uncategorized industries
+};
+
 /**
  *
  */
 function App() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [icons, setIcons] = useState(/** @type {Icon[]} */ ([]));
-	const [filteredIcons, setFilteredIcons] = useState(
-		/** @type {Icon[]} */ ([]),
-	);
+	const [filteredIcons, setFilteredIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [visibleIcons, setVisibleIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [error, setError] = useState(/** @type {string | null} */ (null));
 	const [isLoading, setIsLoading] = useState(true);
@@ -157,7 +207,9 @@ function App() {
 	const [isCompactView, setIsCompactView] = useState(false);
 	const [isViewTransitioning, setIsViewTransitioning] = useState(false);
 	const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
-	const cancelColoringReference = React.useRef(false);
+	const [selectedTags, setSelectedTags] = useState(/** @type {string[]} */ ([]));
+	const [expandedCategories, setExpandedCategories] = useState(/** @type {string[]} */ ([]));
+	const cancelColoringReference = useRef(false);
 
 	// Lazy loading related states
 	const [currentPage, setCurrentPage] = useState(1);
@@ -166,6 +218,63 @@ function App() {
 	const COMPACT_CHUNK_SIZE = 500; // Size of chunks to load in compact view
 	const observerTarget = useRef(null);
 	const loadingChunkReference = useRef(false);
+
+	// Get unique industry tags and their counts, organized by category
+	const categorizedTags = useMemo(() => {
+		const tagCounts = new Map();
+		icons.forEach(icon => {
+			if (icon.industry) {
+				icon.industry.forEach(tag => {
+					tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+				});
+			}
+		});
+
+		// Create a map of categories to their tags and counts
+		const categorized = new Map();
+		
+		// First, categorize all known tags
+		for (const [category, industries] of Object.entries(INDUSTRY_CATEGORIES)) {
+			const categoryTags = new Map();
+			industries.forEach(industry => {
+				if (tagCounts.has(industry)) {
+					categoryTags.set(industry, tagCounts.get(industry));
+					tagCounts.delete(industry); // Remove from original map
+				}
+			});
+			if (categoryTags.size > 0) {
+				categorized.set(category, new Map([...categoryTags.entries()].sort((a, b) => a[0].localeCompare(b[0]))));
+			}
+		}
+
+		// Add remaining uncategorized tags to "Other Industries"
+		if (tagCounts.size > 0) {
+			categorized.set("Other Industries", new Map([...tagCounts.entries()].sort((a, b) => a[0].localeCompare(b[0]))));
+		}
+
+		return categorized;
+	}, [icons]);
+
+	// Calculate category counts
+	const categoryIconCounts = useMemo(() => {
+		const counts = new Map();
+		for (const [category, tags] of categorizedTags.entries()) {
+			counts.set(category, Array.from(tags.values()).reduce((sum, count) => sum + count, 0));
+		}
+		return counts;
+	}, [categorizedTags]);
+
+	/**
+	 * Toggle the expanded state of a category
+	 * @param {string} category The category to toggle
+	 */
+	const toggleCategory = useCallback((category) => {
+		setExpandedCategories(prev => 
+			prev.includes(category)
+				? prev.filter(c => c !== category)
+				: [...prev, category]
+		);
+	}, []);
 
 	// Effect to handle chunked loading in compact view
 	useEffect(() => {
@@ -259,27 +368,24 @@ function App() {
 	}, [currentPage, loadMoreIcons, filteredIcons]);
 
 	useEffect(() => {
-		if (searchTerm.trim() === '') {
-			setFilteredIcons(icons);
+		let filtered;
+		if (searchTerm.trim() === '' && selectedTags.length === 0) {
+			filtered = icons;
 		} else {
-			const filtered = icons.filter((icon) =>
-				icon.title.toLowerCase().includes(searchTerm.toLowerCase()),
-			);
-			setFilteredIcons(filtered);
+			filtered = icons.filter((icon) => {
+				const matchesSearch = icon.title.toLowerCase().includes(searchTerm.toLowerCase());
+				const matchesTags = selectedTags.length === 0 || 
+					(icon.industry && icon.industry.some(tag => selectedTags.includes(tag)));
+				return matchesSearch && matchesTags;
+			});
 		}
+		
+		setFilteredIcons(filtered);
 
 		// Reset loading state for both views
 		if (isCompactView) {
 			// In compact view, start with first chunk
-			setVisibleIcons(
-				searchTerm.trim() === ''
-					? icons.slice(0, COMPACT_CHUNK_SIZE)
-					: icons
-							.filter((icon) =>
-								icon.title.toLowerCase().includes(searchTerm.toLowerCase()),
-							)
-							.slice(0, COMPACT_CHUNK_SIZE),
-			);
+			setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
 			setHasMore(true);
 		} else {
 			setCurrentPage(1);
@@ -287,7 +393,7 @@ function App() {
 		}
 
 		loadingChunkReference.current = false;
-	}, [searchTerm, icons, isCompactView, COMPACT_CHUNK_SIZE]);
+	}, [searchTerm, icons, isCompactView, COMPACT_CHUNK_SIZE, selectedTags]);
 
 	const startColoringAll = () => {
 		if (isColoringAll) {
@@ -520,6 +626,65 @@ function App() {
 								</svg>
 							)}
 						</Button>
+					</div>
+
+					{/* Industry Tags */}
+					<div className="space-y-4">
+						<div className="flex items-center justify-between">
+							<h2 className="text-sm font-medium">Filter by Industry</h2>
+							{selectedTags.length > 0 && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setSelectedTags([])}
+									className="h-8 px-2 text-xs"
+								>
+									Clear All
+								</Button>
+							)}
+						</div>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{Array.from(categorizedTags.entries()).map(([category, tags]) => (
+								<div key={category} className="space-y-2">
+									<button
+										onClick={() => toggleCategory(category)}
+										className="flex items-center gap-2 w-full text-left text-sm font-medium hover:text-primary transition-colors"
+									>
+										{expandedCategories.includes(category) ? (
+											<ChevronDown className="h-4 w-4" />
+										) : (
+											<ChevronRight className="h-4 w-4" />
+										)}
+										{category}
+									</button>
+									{expandedCategories.includes(category) && (
+										<div className="flex flex-wrap gap-2 pl-6">
+											{Array.from(tags.entries()).map(([tag, count]) => (
+												<button
+													key={tag}
+													onClick={() => {
+														setSelectedTags(prev =>
+															prev.includes(tag)
+																? prev.filter(t => t !== tag)
+																: [...prev, tag]
+														);
+													}}
+													className={cn(
+														'inline-flex items-center text-xs px-3 h-7 rounded-full transition-colors',
+														'border border-input hover:bg-accent hover:text-accent-foreground',
+														selectedTags.includes(tag)
+															? 'bg-primary text-primary-foreground hover:bg-primary/90'
+															: 'bg-background'
+													)}
+												>
+													{tag}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
+							))}
+						</div>
 					</div>
 
 					<div
