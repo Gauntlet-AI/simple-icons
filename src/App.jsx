@@ -8,6 +8,32 @@ import {ToastContextProvider} from './components/ui/toast-context';
 import './styles/globals.css';
 import {cn} from './lib/utils.js';
 
+// Constants for localStorage keys
+const STORAGE_KEYS = {
+	SEARCH_TERM: 'icon-study-search',
+	SELECTED_TAGS: 'icon-study-tags',
+	IS_COMPACT_VIEW: 'icon-study-compact-view',
+	SHOW_AI_BUTTONS: 'icon-study-show-ai',
+	COLORED_ICONS: 'icon-study-colored-icons',
+};
+
+/**
+ * Helper function to safely parse JSON from localStorage
+ * @template T
+ * @param {string} key
+ * @param {T} defaultValue
+ * @returns {T}
+ */
+const getStoredValue = (key, defaultValue) => {
+	try {
+		const item = localStorage.getItem(key);
+		return item ? JSON.parse(item) : defaultValue;
+	} catch (error) {
+		console.error('Error reading from localStorage:', error);
+		return defaultValue;
+	}
+};
+
 /** @type {{ [key: string]: string }} */
 const TITLE_TO_SLUG_REPLACEMENTS = {
 	'+': 'plus',
@@ -196,7 +222,7 @@ const INDUSTRY_CATEGORIES = {
  *
  */
 function App() {
-	const [searchTerm, setSearchTerm] = useState('');
+	const [searchTerm, setSearchTerm] = useState(() => getStoredValue(STORAGE_KEYS.SEARCH_TERM, ''));
 	const [icons, setIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [filteredIcons, setFilteredIcons] = useState(/** @type {Icon[]} */ ([]));
 	const [visibleIcons, setVisibleIcons] = useState(/** @type {Icon[]} */ ([]));
@@ -204,13 +230,13 @@ function App() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isColoringAll, setIsColoringAll] = useState(false);
 	const [coloredIconsCount, setColoredIconsCount] = useState(0);
-	const [isCompactView, setIsCompactView] = useState(false);
+	const [isCompactView, setIsCompactView] = useState(() => getStoredValue(STORAGE_KEYS.IS_COMPACT_VIEW, false));
 	const [lastColoredIndex, setLastColoredIndex] = useState(0);
 	const [isViewTransitioning, setIsViewTransitioning] = useState(false);
 	const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
-	const [selectedTags, setSelectedTags] = useState(/** @type {string[]} */ ([]));
+	const [selectedTags, setSelectedTags] = useState(() => getStoredValue(STORAGE_KEYS.SELECTED_TAGS, []));
 	const [expandedCategories, setExpandedCategories] = useState(/** @type {string[]} */ ([]));
-	const [showAiButtons, setShowAiButtons] = useState(true);
+	const [showAiButtons, setShowAiButtons] = useState(() => getStoredValue(STORAGE_KEYS.SHOW_AI_BUTTONS, true));
 	const cancelColoringReference = useRef(false);
 
 	// Lazy loading related states
@@ -370,118 +396,6 @@ function App() {
 	}, [currentPage, loadMoreIcons, filteredIcons]);
 
 	useEffect(() => {
-		let filtered;
-		if (searchTerm.trim() === '' && selectedTags.length === 0) {
-			filtered = icons;
-		} else {
-			filtered = icons.filter((icon) => {
-				const matchesSearch = icon.title.toLowerCase().includes(searchTerm.toLowerCase());
-				const matchesTags = selectedTags.length === 0 || 
-					(icon.industry && icon.industry.some(tag => selectedTags.includes(tag)));
-				return matchesSearch && matchesTags;
-			});
-		}
-		
-		setFilteredIcons(filtered);
-
-		// Reset loading state for both views
-		if (isCompactView) {
-			// In compact view, start with first chunk
-			setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
-			setHasMore(true);
-		} else {
-			setCurrentPage(1);
-			setHasMore(true);
-		}
-
-		loadingChunkReference.current = false;
-	}, [searchTerm, icons, isCompactView, COMPACT_CHUNK_SIZE, selectedTags]);
-
-	const startColoringAll = () => {
-		if (isColoringAll) {
-			cancelColoringReference.current = true;
-			setIsColoringAll(false);
-			return;
-		}
-
-		setIsColoringAll(true);
-		cancelColoringReference.current = false;
-
-		// Count already colored icons up to lastColoredIndex
-		const alreadyColoredCount = filteredIcons
-			.slice(0, lastColoredIndex)
-			.filter(icon => icon.forceColored)
-			.length;
-		setColoredIconsCount(alreadyColoredCount);
-
-		processIconChunk(
-			lastColoredIndex,
-			filteredIcons,
-			10,
-			(updatedIcons) => {
-				setFilteredIcons(updatedIcons);
-				if (cancelColoringReference.current) {
-					setIsColoringAll(false);
-				}
-				// Check if we're done
-				if (lastColoredIndex >= filteredIcons.length) {
-					setIsColoringAll(false);
-					cancelColoringReference.current = true;
-				}
-			},
-			(count) => {
-				setColoredIconsCount((previous) => previous + count);
-				setLastColoredIndex((prev) => {
-					const newIndex = Math.min(prev + 10, filteredIcons.length);
-					// If we've reached the end, stop the process
-					if (newIndex >= filteredIcons.length) {
-						setIsColoringAll(false);
-						cancelColoringReference.current = true;
-					}
-					return newIndex;
-				});
-			},
-			() => cancelColoringReference.current,
-		);
-	};
-
-	// Reset progress when search term or filters change
-	useEffect(() => {
-		setLastColoredIndex(0);
-		setColoredIconsCount(0);
-		setIsColoringAll(false);
-		cancelColoringReference.current = true;
-	}, [searchTerm, selectedTags]);
-
-	const handleViewChange = () => {
-		setIsViewTransitioning(true);
-		loadingChunkReference.current = false;
-
-		// Immediately set the new view state
-		setIsCompactView((previous) => {
-			const newIsCompact = !previous;
-
-			if (newIsCompact) {
-				// If switching to compact view, start with first chunk
-				setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
-				setHasMore(filteredIcons.length > COMPACT_CHUNK_SIZE);
-			} else {
-				// If switching to regular view, reset to initial state
-				setVisibleIcons([]);
-				setCurrentPage(1);
-				setHasMore(true);
-			}
-
-			return newIsCompact;
-		});
-
-		// Give a small delay for the layout to be ready
-		setTimeout(() => {
-			setIsViewTransitioning(false);
-		}, 150);
-	};
-
-	useEffect(() => {
 		console.log('App mounted, fetching data...');
 		setIsLoading(true);
 
@@ -546,8 +460,40 @@ function App() {
 					sample: iconsList[0],
 				});
 
+				// First set the base icons
 				setIcons(iconsList);
-				setFilteredIcons(iconsList);
+				
+				// Then apply any stored colored state
+				const coloredIconSlugs = new Set(getStoredValue(STORAGE_KEYS.COLORED_ICONS, []));
+				const iconsWithColorState = iconsList.map(icon => ({
+					...icon,
+					forceColored: coloredIconSlugs.has(icon.slug)
+				}));
+				
+				// Apply initial filters based on stored search and tags
+				let filtered = iconsWithColorState;
+				const storedSearch = getStoredValue(STORAGE_KEYS.SEARCH_TERM, '');
+				const storedTags = getStoredValue(STORAGE_KEYS.SELECTED_TAGS, []);
+				
+				if (storedSearch.trim() !== '' || storedTags.length > 0) {
+					filtered = iconsWithColorState.filter((icon) => {
+						const matchesSearch = icon.title.toLowerCase().includes(storedSearch.toLowerCase());
+						const matchesTags = storedTags.length === 0 || 
+							(icon.industry && icon.industry.some(tag => storedTags.includes(tag)));
+						return matchesSearch && matchesTags;
+					});
+				}
+
+				setFilteredIcons(filtered);
+				setColoredIconsCount(coloredIconSlugs.size);
+				
+				// Set initial visible icons based on view mode
+				if (getStoredValue(STORAGE_KEYS.IS_COMPACT_VIEW, false)) {
+					setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
+				} else {
+					setVisibleIcons(filtered.slice(0, ICONS_PER_PAGE));
+				}
+				
 				setIsLoading(false);
 			})
 			.catch((error) => {
@@ -556,6 +502,194 @@ function App() {
 				setIsLoading(false);
 			});
 	}, []);
+
+	// Save state to localStorage when it changes
+	useEffect(() => {
+		localStorage.setItem(STORAGE_KEYS.SEARCH_TERM, JSON.stringify(searchTerm));
+	}, [searchTerm]);
+
+	useEffect(() => {
+		localStorage.setItem(STORAGE_KEYS.SELECTED_TAGS, JSON.stringify(selectedTags));
+	}, [selectedTags]);
+
+	useEffect(() => {
+		localStorage.setItem(STORAGE_KEYS.IS_COMPACT_VIEW, JSON.stringify(isCompactView));
+	}, [isCompactView]);
+
+	useEffect(() => {
+		localStorage.setItem(STORAGE_KEYS.SHOW_AI_BUTTONS, JSON.stringify(showAiButtons));
+	}, [showAiButtons]);
+
+	// Save colored icons state
+	useEffect(() => {
+		if (!isColoringAll) {  // Only save when not actively coloring
+			const coloredIcons = filteredIcons
+				.filter(icon => icon.forceColored)
+				.map(icon => icon.slug);
+			localStorage.setItem(STORAGE_KEYS.COLORED_ICONS, JSON.stringify(coloredIcons));
+		}
+	}, [filteredIcons, isColoringAll]);
+
+	// Restore colored icons state after initial load
+	useEffect(() => {
+		if (icons.length > 0 && !isLoading) {
+			const coloredIconSlugs = new Set(getStoredValue(STORAGE_KEYS.COLORED_ICONS, []));
+			if (coloredIconSlugs.size > 0) {
+				setFilteredIcons(icons => 
+					icons.map(icon => ({
+						...icon,
+						forceColored: coloredIconSlugs.has(icon.slug)
+					}))
+				);
+				setColoredIconsCount(coloredIconSlugs.size);
+			}
+		}
+	}, [icons.length, isLoading]);
+
+	// Effect to filter icons when search term or tags change
+	useEffect(() => {
+		// Apply filters based on search and tags
+		let filtered = icons;
+		
+		if (searchTerm.trim() !== '' || selectedTags.length > 0) {
+			filtered = icons.filter((icon) => {
+				const matchesSearch = icon.title.toLowerCase().includes(searchTerm.toLowerCase());
+				const matchesTags = selectedTags.length === 0 || 
+					(icon.industry && icon.industry.some(tag => selectedTags.includes(tag)));
+				return matchesSearch && matchesTags;
+			});
+		}
+
+		// Preserve colored state from the current filtered icons
+		const coloredSlugs = new Set(
+			filteredIcons
+				.filter(icon => icon.forceColored)
+				.map(icon => icon.slug)
+		);
+
+		filtered = filtered.map(icon => ({
+			...icon,
+			forceColored: coloredSlugs.has(icon.slug)
+		}));
+
+		setFilteredIcons(filtered);
+
+		// Reset visible icons based on view mode
+		if (isCompactView) {
+			setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
+			setHasMore(filtered.length > COMPACT_CHUNK_SIZE);
+		} else {
+			setVisibleIcons(filtered.slice(0, ICONS_PER_PAGE));
+			setCurrentPage(1);
+			setHasMore(filtered.length > ICONS_PER_PAGE);
+		}
+	}, [searchTerm, selectedTags, icons, isCompactView]);
+
+	// Reset progress when search term or filters change
+	useEffect(() => {
+		setLastColoredIndex(0);
+		setColoredIconsCount(filteredIcons.filter(icon => icon.forceColored).length);
+		setIsColoringAll(false);
+		cancelColoringReference.current = true;
+	}, [searchTerm, selectedTags]);
+
+	const startColoringAll = () => {
+		if (isColoringAll) {
+			cancelColoringReference.current = true;
+			setIsColoringAll(false);
+			return;
+		}
+
+		setIsColoringAll(true);
+		cancelColoringReference.current = false;
+
+		// Count already colored icons up to lastColoredIndex
+		const alreadyColoredCount = filteredIcons
+			.slice(0, lastColoredIndex)
+			.filter(icon => icon.forceColored)
+			.length;
+		setColoredIconsCount(alreadyColoredCount);
+
+		processIconChunk(
+			lastColoredIndex,
+			filteredIcons,
+			10,
+			(updatedIcons) => {
+				setFilteredIcons(updatedIcons);
+				if (cancelColoringReference.current) {
+					setIsColoringAll(false);
+				}
+				// Check if we're done
+				if (lastColoredIndex >= filteredIcons.length) {
+					setIsColoringAll(false);
+					cancelColoringReference.current = true;
+				}
+			},
+			(count) => {
+				setColoredIconsCount((previous) => previous + count);
+				setLastColoredIndex((prev) => {
+					const newIndex = Math.min(prev + 10, filteredIcons.length);
+					// If we've reached the end, stop the process
+					if (newIndex >= filteredIcons.length) {
+						setIsColoringAll(false);
+						cancelColoringReference.current = true;
+					}
+					return newIndex;
+				});
+			},
+			() => cancelColoringReference.current,
+		);
+	};
+
+	const uncolorAll = () => {
+		// First stop any active coloring
+		if (isColoringAll) {
+			cancelColoringReference.current = true;
+			setIsColoringAll(false);
+		}
+
+		// Wait a tiny bit to ensure the coloring process has stopped
+		setTimeout(() => {
+			// Reset all icons to uncolored state
+			setFilteredIcons((icons) =>
+				icons.map((icon) => ({...icon, forceColored: false}))
+			);
+			setColoredIconsCount(0);
+			setLastColoredIndex(0);
+			cancelColoringReference.current = true;
+		}, 50);
+	};
+
+	const handleViewChange = () => {
+		setIsViewTransitioning(true);
+		loadingChunkReference.current = false;
+
+		// Immediately set the new view state
+		setIsCompactView((previous) => {
+			const newIsCompact = !previous;
+
+			// Get the current filtered icons with their colored state
+			const currentFiltered = filteredIcons;
+
+			if (newIsCompact) {
+				// If switching to compact view, start with first chunk
+				setVisibleIcons(currentFiltered.slice(0, COMPACT_CHUNK_SIZE));
+				setHasMore(currentFiltered.length > COMPACT_CHUNK_SIZE);
+			} else {
+				// If switching to regular view, reset to initial state
+				setVisibleIcons(currentFiltered.slice(0, ICONS_PER_PAGE));
+				setCurrentPage(1);
+				setHasMore(true);
+			}
+
+			return newIsCompact;
+		});
+
+		// Give a small delay for the layout to be ready
+		setTimeout(() => {
+			setIsViewTransitioning(false);
+		}, 150);
+	};
 
 	if (error) {
 		return (
@@ -680,12 +814,42 @@ function App() {
 								</svg>
 							)}
 						</Button>
+						{coloredIconsCount > 0 && (
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={uncolorAll}
+								className="relative transition-all duration-200"
+								title="Remove all colors"
+							>
+								<div className="relative">
+									<Paintbrush className="h-4 w-4 text-muted-foreground" />
+									<X className="h-3 w-3 absolute -top-1 -right-1 text-destructive" />
+								</div>
+							</Button>
+						)}
 					</div>
 
 					{/* Industry Tags */}
 					<div className="space-y-4">
 						<div className="flex items-center justify-between">
-							<h2 className="text-sm font-medium">Filter by Industry</h2>
+							<div className="flex items-center gap-2">
+								<h2 className="text-sm font-medium">Filter by Industry</h2>
+								{(selectedTags.length > 0 || searchTerm.trim() !== '') && (
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => {
+											setSearchTerm('');
+											setSelectedTags([]);
+										}}
+										className="h-8 px-3 text-xs flex items-center gap-1.5"
+									>
+										<X className="h-3 w-3" />
+										Clear All Filters
+									</Button>
+								)}
+							</div>
 							{selectedTags.length > 0 && (
 								<Button
 									variant="ghost"
@@ -693,7 +857,7 @@ function App() {
 									onClick={() => setSelectedTags([])}
 									className="h-8 px-2 text-xs"
 								>
-									Clear All
+									Clear Tags
 								</Button>
 							)}
 						</div>

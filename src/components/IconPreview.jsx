@@ -121,21 +121,23 @@ export function IconPreview({
 				)}
 			>
 				{!isCompact && (
-					<div className="bg-gray-50 dark:bg-gray-800 border-b flex items-center justify-between">
-						<div className="px-3 py-1.5 text-xs font-medium line-clamp-2 text-center border-b border-gray-200 dark:border-gray-600 flex-1">
+					<div className="bg-gray-50 dark:bg-gray-800 border-b">
+						<div className="px-3 py-1.5 text-xs font-medium line-clamp-2 text-center border-b border-gray-200 dark:border-gray-600">
 							{icon.title}
 						</div>
+					</div>
+				)}
+
+				<div className={cn('flex-1 relative', isCompact ? 'p-0' : 'p-0.5 py-3')}>
+					{!isCompact && (
 						<button
 							onClick={onAnalysisOpen}
-							className="px-2 py-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200"
+							className="absolute top-1 right-1 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 bg-white/90 dark:bg-gray-700/90 rounded-full border border-gray-200 dark:border-gray-600"
 							title="AI Analysis"
 						>
 							<Sparkles size={16} />
 						</button>
-					</div>
-				)}
-
-				<div className={cn('flex-1', isCompact ? 'p-0' : 'p-0.5 py-3')}>
+					)}
 					<div className={cn(
 						'h-full',
 						!isCompact && 'flex items-center justify-center'
