@@ -234,7 +234,7 @@ function App() {
 	const [lastColoredIndex, setLastColoredIndex] = useState(0);
 	const [isViewTransitioning, setIsViewTransitioning] = useState(false);
 	const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
-	const [selectedTags, setSelectedTags] = useState(() => getStoredValue(STORAGE_KEYS.SELECTED_TAGS, []));
+	const [selectedTags, setSelectedTags] = useState(/** @type {string[]} */ (getStoredValue(STORAGE_KEYS.SELECTED_TAGS, [])));
 	const [expandedCategories, setExpandedCategories] = useState(/** @type {string[]} */ ([]));
 	const [showAiButtons, setShowAiButtons] = useState(() => getStoredValue(STORAGE_KEYS.SHOW_AI_BUTTONS, true));
 	const cancelColoringReference = useRef(false);
@@ -848,8 +848,54 @@ function App() {
 							)}
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{Array.from(categorizedTags.entries()).map(([category, tags]) => (
-								<div key={category} className="space-y-2">
+							{Array.from(categorizedTags.entries())
+								.filter(([category]) => category !== "Other Industries")
+								.map(([category, tags]) => (
+									<div key={category} className="space-y-2">
+										<button
+											onClick={() => toggleCategory(category)}
+											className="flex items-center gap-2 w-full text-left text-sm font-medium hover:text-primary transition-colors"
+										>
+											{expandedCategories.includes(category) ? (
+												<ChevronDown className="h-4 w-4" />
+											) : (
+												<ChevronRight className="h-4 w-4" />
+											)}
+											{category}
+										</button>
+										{expandedCategories.includes(category) && (
+											<div className="flex flex-wrap gap-2 pl-6">
+												{Array.from(tags.entries()).map(([tag, count]) => (
+													<button
+														key={tag}
+														onClick={() => {
+															setSelectedTags(prev =>
+																prev.includes(tag)
+																	? prev.filter(t => t !== tag)
+																	: [...prev, tag]
+															);
+														}}
+														className={cn(
+															'inline-flex items-center text-xs px-3 h-7 rounded-full transition-colors',
+															'border border-input hover:bg-accent hover:text-accent-foreground',
+															selectedTags.includes(tag)
+																? 'bg-primary text-primary-foreground hover:bg-primary/90'
+																: 'bg-background'
+														)}
+													>
+														{tag}
+													</button>
+												))}
+											</div>
+										)}
+									</div>
+								))}
+						</div>
+						{/* Other Industries section */}
+						{Array.from(categorizedTags.entries())
+							.filter(([category]) => category === "Other Industries")
+							.map(([category, tags]) => (
+								<div key={category} className="space-y-2 mt-4 border-t pt-4">
 									<button
 										onClick={() => toggleCategory(category)}
 										className="flex items-center gap-2 w-full text-left text-sm font-medium hover:text-primary transition-colors"
@@ -888,7 +934,6 @@ function App() {
 									)}
 								</div>
 							))}
-						</div>
 					</div>
 
 					<div
