@@ -4,6 +4,12 @@
 	"installCommand": "npm install",
 	"framework": "vite",
 	"outputDirectory": "dist",
+	"functions": {
+		"api/*.js": {
+			"memory": 1024,
+			"maxDuration": 10
+		}
+	},
 	"rewrites": [
 		{
 			"source": "/api/(.*)",
@@ -13,5 +19,9 @@
 			"source": "/(.*)",
 			"destination": "/"
 		}
+	],
+	"files": [
+		"icons/**/*.svg",
+		"_data/simple-icons.json"
 	]
 }
