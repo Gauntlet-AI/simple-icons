@@ -308,35 +308,16 @@ function App() {
 	useEffect(() => {
 		if (!isCompactView) return;
 
-		const loadNextChunk = () => {
-			if (loadingChunkReference.current) return;
-			loadingChunkReference.current = true;
-
-			setVisibleIcons((previous) => {
-				const nextChunkEnd = previous.length + COMPACT_CHUNK_SIZE;
-				const newIcons = filteredIcons.slice(0, nextChunkEnd);
-
-				// If we've loaded all icons, set hasMore to false
-				if (newIcons.length >= filteredIcons.length) {
-					setHasMore(false);
-				}
-
-				loadingChunkReference.current = false;
-				return newIcons;
-			});
-		};
-
-		// Start loading chunks
-		if (visibleIcons.length < filteredIcons.length) {
-			requestAnimationFrame(loadNextChunk);
-		}
-	}, [isCompactView, filteredIcons, visibleIcons.length]);
+		// In compact view, load all icons at once
+		setVisibleIcons(filteredIcons);
+		setHasMore(false);
+	}, [isCompactView, filteredIcons]);
 
 	const loadMoreIcons = useCallback(() => {
 		if (isCompactView) {
-			// In compact view, start with first chunk
-			setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
-			setHasMore(filteredIcons.length > COMPACT_CHUNK_SIZE);
+			// In compact view, show all icons
+			setVisibleIcons(filteredIcons);
+			setHasMore(false);
 			return;
 		}
 
@@ -576,8 +557,9 @@ function App() {
 
 		// Reset visible icons based on view mode
 		if (isCompactView) {
-			setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
-			setHasMore(filtered.length > COMPACT_CHUNK_SIZE);
+			// In compact view, show all icons
+			setVisibleIcons(filtered);
+			setHasMore(false);
 		} else {
 			setVisibleIcons(filtered.slice(0, ICONS_PER_PAGE));
 			setCurrentPage(1);
@@ -616,6 +598,10 @@ function App() {
 			10,
 			(updatedIcons) => {
 				setFilteredIcons(updatedIcons);
+				// Update visible icons in compact mode to reflect changes
+				if (isCompactView) {
+					setVisibleIcons(updatedIcons.slice(0, Math.max(COMPACT_CHUNK_SIZE, visibleIcons.length)));
+				}
 				if (cancelColoringReference.current) {
 					setIsColoringAll(false);
 				}
@@ -672,9 +658,9 @@ function App() {
 			const currentFiltered = filteredIcons;
 
 			if (newIsCompact) {
-				// If switching to compact view, start with first chunk
-				setVisibleIcons(currentFiltered.slice(0, COMPACT_CHUNK_SIZE));
-				setHasMore(currentFiltered.length > COMPACT_CHUNK_SIZE);
+				// If switching to compact view, show all icons
+				setVisibleIcons(currentFiltered);
+				setHasMore(false);
 			} else {
 				// If switching to regular view, reset to initial state
 				setVisibleIcons(currentFiltered.slice(0, ICONS_PER_PAGE));
