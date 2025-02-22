@@ -58,12 +58,17 @@ export default async function handler(request, response) {
     );
     const brandColor = icon ? `#${icon.hex}` : '#000000';
 
-    // Convert SVG to PNG using Sharp with brand color
-    const pngBuffer = await sharp(Buffer.from(svgBuffer))
+    // Read the SVG as string and directly set the brand color
+    let svgString = Buffer.from(svgBuffer).toString('utf-8');
+    svgString = svgString.replace(/fill="[^"]*"/g, `fill="${brandColor}"`);
+    if (!svgString.includes('fill="')) {
+      svgString = svgString.replace(/<path/g, `<path fill="${brandColor}"`);
+    }
+
+    // Convert to PNG using Sharp
+    const pngBuffer = await sharp(Buffer.from(svgString))
       .resize(512, 512)
       .png()
-      .flatten({ background: '#ffffff' })
-      .tint(brandColor)
       .toBuffer();
 
     // Convert to base64
@@ -95,14 +100,14 @@ export default async function handler(request, response) {
         {
           role: 'system',
           content:
-            'You are a concise design critic. Analyze icons focusing on key visual elements and effectiveness. Keep each point brief but insightful. Use markdown formatting.',
+            `You are a concise design critic. Analyze icons focusing on key visual elements and effectiveness. The icon's color is ${brandColor}, and you should see that the image that has been passed to you has ${brandColor}, so comment on that specifically, and how ${brandColor} contributes to the design. Keep each point brief but insightful. Use markdown formatting. Always mention the brand color in your analysis.`,
         },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: "Analyze this icon's design elements and effectiveness as a brand symbol. Focus on the most important aspects.",
+              text: "Analyze this icon's design elements and effectiveness as a brand symbol. Focus on the most important aspects including its use of the brand color.",
             },
             {
               type: 'image_url',
