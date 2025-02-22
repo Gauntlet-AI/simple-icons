@@ -80,7 +80,7 @@ export function UploadLogoModal() {
       formData.append('description', description);
       formData.append('brandColor', brandColor);
 
-      const response = await fetch('http://localhost:3001/api/analyze-uploaded-logo', {
+      const response = await fetch('/api/analyze-uploaded-logo', {
         method: 'POST',
         body: formData,
       });
