@@ -75,16 +75,16 @@ export function IconAnalysis({icon, isOpen, onClose}) {
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-4">
-			<div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full my-4 relative max-h-[90vh] flex flex-col">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-2 sm:p-4">
+			<div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-2xl my-2 sm:my-4 relative max-h-[95vh] sm:max-h-[90vh] flex flex-col">
 				<button
 					onClick={onClose}
-					className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+					className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
 				>
 					×
 				</button>
 
-				<h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-4">
+				<h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2 sm:gap-4 flex-shrink-0">
 					<div className="w-8 h-8 flex items-center justify-center">
 						<img
 							src={`/icons/${icon.slug}.svg`}
@@ -108,18 +108,22 @@ export function IconAnalysis({icon, isOpen, onClose}) {
 				)}
 
 				{analysis && (
-					<div className="space-y-6 flex-1 flex flex-col min-h-0">
-						<div>
-							<h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">
+					<div className="space-y-4 sm:space-y-6 flex-1 flex flex-col overflow-hidden py-2">
+						<div className="flex-shrink-0 min-h-0">
+							<h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800 dark:text-gray-200">
 								Product Description
 							</h3>
-							<p className="text-gray-600 dark:text-gray-300">
-								{analysis.productDescription}
-							</p>
+							<div className="relative">
+								<div className="overflow-y-auto max-h-[20vh] sm:max-h-[25vh] px-3 sm:px-4 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg shadow-inner scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+									<p className="text-gray-600 dark:text-gray-300">
+										{analysis.productDescription}
+									</p>
+								</div>
+							</div>
 						</div>
 
-						<div className="flex-1 min-h-0">
-							<h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">
+						<div className="flex-shrink-0 min-h-0">
+							<h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800 dark:text-gray-200">
 								Icon Analysis
 							</h3>
 							<div className="relative">
@@ -132,15 +136,15 @@ export function IconAnalysis({icon, isOpen, onClose}) {
 								<div
 									ref={scrollContainerReference}
 									onScroll={handleScroll}
-									className="prose prose-sm dark:prose-invert prose-headings:mb-2 prose-headings:mt-4 prose-p:mt-2 prose-p:mb-2 prose-ul:mt-2 prose-ul:mb-2 prose-li:mt-1 prose-li:mb-1 overflow-y-auto max-h-[30vh] px-4 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg shadow-inner scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500"
+									className="prose prose-sm dark:prose-invert prose-headings:mb-2 prose-headings:mt-4 prose-p:mt-2 prose-p:mb-2 prose-ul:mt-2 prose-ul:mb-2 prose-li:mt-1 prose-li:mb-1 overflow-y-auto max-h-[20vh] sm:max-h-[25vh] px-3 sm:px-4 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg shadow-inner scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
 								>
 									<ReactMarkdown>{analysis.iconAnalysis}</ReactMarkdown>
 								</div>
 							</div>
 						</div>
 
-						<div>
-							<h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">
+						<div className="flex-shrink-0 min-h-0">
+							<h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800 dark:text-gray-200">
 								Design Score
 							</h3>
 							{scoreLoading ? (
@@ -153,8 +157,8 @@ export function IconAnalysis({icon, isOpen, onClose}) {
 								</div>
 							) : (
 								score && (
-									<>
-										<div className="flex items-center gap-4">
+									<div className="overflow-y-auto max-h-[20vh] sm:max-h-[25vh] px-3 sm:px-4 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg shadow-inner scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+										<div className="flex items-center gap-4 mb-2">
 											<div className="h-4 bg-gray-200 dark:bg-gray-600 rounded-full flex-1">
 												<div
 													className={cn(
@@ -168,16 +172,16 @@ export function IconAnalysis({icon, isOpen, onClose}) {
 													style={{width: `${score.designScore}%`}}
 												/>
 											</div>
-											<span className="font-mono text-lg font-semibold text-gray-700 dark:text-gray-300">
+											<span className="font-mono text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300">
 												{score.designScore}/100
 											</span>
 										</div>
 										{score.scoreExplanation && (
-											<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+											<p className="text-sm text-gray-600 dark:text-gray-400">
 												{score.scoreExplanation}
 											</p>
 										)}
-									</>
+									</div>
 								)
 							)}
 						</div>
