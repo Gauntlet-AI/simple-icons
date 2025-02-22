@@ -247,6 +247,9 @@ function App() {
 	const observerTarget = useRef(null);
 	const loadingChunkReference = useRef(false);
 
+	const BATCH_SIZE = 50; // Number of icons to load in each batch
+	const BATCH_DELAY = 300; // Milliseconds between batches
+
 	// Get unique industry tags and their counts, organized by category
 	const categorizedTags = useMemo(() => {
 		const tagCounts = new Map();
@@ -375,6 +378,35 @@ function App() {
 	useEffect(() => {
 		loadMoreIcons();
 	}, [currentPage, loadMoreIcons, filteredIcons]);
+
+	const loadIconsInBatches = useCallback((icons, onComplete) => {
+		let currentBatch = 0;
+		const totalBatches = Math.ceil(icons.length / BATCH_SIZE);
+
+		const loadNextBatch = () => {
+			const start = currentBatch * BATCH_SIZE;
+			const end = Math.min(start + BATCH_SIZE, icons.length);
+			const batch = icons.slice(0, end); // Keep previous icons and add new batch
+
+			console.log(`Loading batch ${currentBatch + 1}/${totalBatches}`, {
+				start,
+				end,
+				remaining: icons.length - end
+			});
+
+			setVisibleIcons(batch);
+			
+			currentBatch++;
+			
+			if (end < icons.length) {
+				setTimeout(loadNextBatch, BATCH_DELAY);
+			} else if (onComplete) {
+				onComplete();
+			}
+		};
+
+		loadNextBatch();
+	}, []);
 
 	useEffect(() => {
 		console.log('App mounted, fetching data...');
@@ -650,19 +682,24 @@ function App() {
 		setIsViewTransitioning(true);
 		loadingChunkReference.current = false;
 
-		// Immediately set the new view state
 		setIsCompactView((previous) => {
 			const newIsCompact = !previous;
-
-			// Get the current filtered icons with their colored state
 			const currentFiltered = filteredIcons;
 
 			if (newIsCompact) {
-				// If switching to compact view, show all icons
-				setVisibleIcons(currentFiltered);
-				setHasMore(false);
+				// If switching to compact view, show initial chunk first
+				setVisibleIcons(currentFiltered.slice(0, COMPACT_CHUNK_SIZE));
+				// Then after a longer delay, load the rest
+				setTimeout(() => {
+					console.log('Loading remaining icons:', {
+						total: currentFiltered.length,
+						initialChunk: COMPACT_CHUNK_SIZE,
+						remaining: currentFiltered.length - COMPACT_CHUNK_SIZE
+					});
+					setVisibleIcons(currentFiltered);
+				}, 500); // Increased delay to 500ms
 			} else {
-				// If switching to regular view, reset to initial state
+				// Regular view behavior remains the same
 				setVisibleIcons(currentFiltered.slice(0, ICONS_PER_PAGE));
 				setCurrentPage(1);
 				setHasMore(true);
@@ -671,7 +708,6 @@ function App() {
 			return newIsCompact;
 		});
 
-		// Give a small delay for the layout to be ready
 		setTimeout(() => {
 			setIsViewTransitioning(false);
 		}, 150);

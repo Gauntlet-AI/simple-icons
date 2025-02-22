@@ -92,10 +92,15 @@ export function IconPreview({
 	};
 
 	useEffect(() => {
-		console.log('Fetching icon:', iconPath);
+		console.log(`[${icon.slug}] Starting fetch:`, iconPath);
 		fetch(iconPath)
 			.then((response) => {
 				if (!response.ok) {
+					console.error(`[${icon.slug}] Failed to load:`, {
+						status: response.status,
+						statusText: response.statusText,
+						path: iconPath
+					});
 					throw new Error(
 						`Failed to load icon: ${response.status} ${response.statusText}`,
 					);
@@ -104,11 +109,23 @@ export function IconPreview({
 				return response.text();
 			})
 			.then((text) => {
-				console.log('Loaded icon:', icon.slug);
+				if (!text.trim().startsWith('<svg')) {
+					console.error(`[${icon.slug}] Invalid SVG content:`, {
+						content: text.slice(0, 100), // Show first 100 chars
+						path: iconPath
+					});
+					throw new Error('Invalid SVG content');
+				}
+				console.log(`[${icon.slug}] Successfully loaded`);
 				setSvgContent(text);
 			})
 			.catch((error) => {
-				console.error(`Failed to load icon: ${iconPath}`, error);
+				console.error(`[${icon.slug}] Error:`, {
+					error: error.message,
+					path: iconPath
+				});
+				// Set a minimal SVG to indicate error
+				setSvgContent('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4L4 20h16L12 4z"/></svg>');
 			});
 	}, [iconPath, icon.slug]);
 

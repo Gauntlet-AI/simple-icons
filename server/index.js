@@ -26,6 +26,8 @@ app.use(express.json());
 
 // Serve static files from the dist directory after building
 app.use(express.static(path.join(__dirname, '../dist')));
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // API endpoint for icon analysis
 app.post('/api/analyze-icon', async (request, res) => {
