@@ -82,11 +82,11 @@ export default async function handler(request, response) {
         {
           role: 'system',
           content:
-            'You are a helpful assistant that writes clear, concise product descriptions.',
+            'You are a helpful assistant that writes clear, specific product descriptions. Focus on what the company/product actually does, its main offering or service, and its target audience. Keep it to one concise but informative sentence.',
         },
         {
           role: 'user',
-          content: `Write a one sentence description for a product/company called "${title}".`,
+          content: `Write a specific one-sentence description for "${title}" that explains what they do or offer.`,
         },
       ],
       temperature: 0.7,
