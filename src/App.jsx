@@ -243,9 +243,11 @@ function App() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [hasMore, setHasMore] = useState(true);
 	const ICONS_PER_PAGE = 700; // Only used in regular view
-	const COMPACT_CHUNK_SIZE = 500; // Size of chunks to load in compact view
+	const COMPACT_CHUNK_SIZE = 100; // Size of chunks to load in compact view
+	const COMPACT_LOAD_DELAY = 300; // Delay between loading chunks in compact view
 	const observerTarget = useRef(null);
 	const loadingChunkReference = useRef(false);
+	const loadingTimeoutReference = useRef(/** @type {number | null} */ (null));
 
 	const BATCH_SIZE = 50; // Number of icons to load in each batch
 	const BATCH_DELAY = 300; // Milliseconds between batches
@@ -298,8 +300,9 @@ function App() {
 	/**
 	 * Toggle the expanded state of a category
 	 * @param {string} category The category to toggle
+	 * @returns {void}
 	 */
-	const toggleCategory = useCallback((category) => {
+	const toggleCategory = useCallback((/** @type {string} */ category) => {
 		setExpandedCategories(prev => 
 			prev.includes(category)
 				? prev.filter(c => c !== category)
@@ -311,16 +314,64 @@ function App() {
 	useEffect(() => {
 		if (!isCompactView) return;
 
-		// In compact view, load all icons at once
-		setVisibleIcons(filteredIcons);
-		setHasMore(false);
-	}, [isCompactView, filteredIcons]);
+		// Clear any existing timeout
+		if (loadingTimeoutReference.current) {
+			clearTimeout(loadingTimeoutReference.current);
+		}
+
+		let isMounted = true; // Track if component is mounted
+		
+		const loadIconsInChunks = () => {
+			if (!isMounted) return;
+
+			setVisibleIcons(prevIcons => {
+				const currentLength = prevIcons.length;
+				const endIndex = Math.min(currentLength + COMPACT_CHUNK_SIZE, filteredIcons.length);
+				
+				// If we've loaded everything, stop
+				if (currentLength >= filteredIcons.length) {
+					setHasMore(false);
+					return prevIcons;
+				}
+
+				// Load the next chunk
+				console.log(`Loading icons ${currentLength} to ${endIndex}`);
+				const newIcons = [...prevIcons, ...filteredIcons.slice(currentLength, endIndex)];
+
+				// Schedule next chunk if needed
+				if (endIndex < filteredIcons.length && isMounted) {
+					loadingTimeoutReference.current = window.setTimeout(loadIconsInChunks, COMPACT_LOAD_DELAY);
+				} else {
+					setHasMore(false);
+				}
+
+				return newIcons;
+			});
+		};
+
+		// Start by loading the first chunk
+		console.log('Starting initial load');
+		setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
+		
+		// Schedule loading of subsequent chunks
+		if (filteredIcons.length > COMPACT_CHUNK_SIZE) {
+			loadingTimeoutReference.current = window.setTimeout(loadIconsInChunks, COMPACT_LOAD_DELAY);
+		} else {
+			setHasMore(false);
+		}
+
+		// Cleanup function
+		return () => {
+			isMounted = false;
+			if (loadingTimeoutReference.current) {
+				clearTimeout(loadingTimeoutReference.current);
+			}
+		};
+	}, [isCompactView, filteredIcons, COMPACT_CHUNK_SIZE, COMPACT_LOAD_DELAY]);
 
 	const loadMoreIcons = useCallback(() => {
 		if (isCompactView) {
-			// In compact view, show all icons
-			setVisibleIcons(filteredIcons);
-			setHasMore(false);
+			// In compact view, loading is handled by the effect above
 			return;
 		}
 
@@ -379,7 +430,16 @@ function App() {
 		loadMoreIcons();
 	}, [currentPage, loadMoreIcons, filteredIcons]);
 
-	const loadIconsInBatches = useCallback((icons, onComplete) => {
+	/**
+	 * Load icons in batches with a delay between each batch
+	 * @param {import('../types').SimpleIcon[]} icons The icons to load
+	 * @param {() => void} [onComplete] Optional callback when loading is complete
+	 * @returns {void}
+	 */
+	const loadIconsInBatches = useCallback((
+		/** @type {import('../types').SimpleIcon[]} */ icons,
+		/** @type {(() => void) | undefined} */ onComplete
+	) => {
 		let currentBatch = 0;
 		const totalBatches = Math.ceil(icons.length / BATCH_SIZE);
 
@@ -486,13 +546,14 @@ function App() {
 				// Apply initial filters based on stored search and tags
 				let filtered = iconsWithColorState;
 				const storedSearch = getStoredValue(STORAGE_KEYS.SEARCH_TERM, '');
+				/** @type {string[]} */
 				const storedTags = getStoredValue(STORAGE_KEYS.SELECTED_TAGS, []);
 				
 				if (storedSearch.trim() !== '' || storedTags.length > 0) {
 					filtered = iconsWithColorState.filter((icon) => {
 						const matchesSearch = icon.title.toLowerCase().includes(storedSearch.toLowerCase());
 						const matchesTags = storedTags.length === 0 || 
-							(icon.industry && icon.industry.some(tag => storedTags.includes(tag)));
+							(icon.industry && icon.industry.some((/** @type {string} */ tag) => storedTags.includes(tag)));
 						return matchesSearch && matchesTags;
 					});
 				}
@@ -689,15 +750,7 @@ function App() {
 			if (newIsCompact) {
 				// If switching to compact view, show initial chunk first
 				setVisibleIcons(currentFiltered.slice(0, COMPACT_CHUNK_SIZE));
-				// Then after a longer delay, load the rest
-				setTimeout(() => {
-					console.log('Loading remaining icons:', {
-						total: currentFiltered.length,
-						initialChunk: COMPACT_CHUNK_SIZE,
-						remaining: currentFiltered.length - COMPACT_CHUNK_SIZE
-					});
-					setVisibleIcons(currentFiltered);
-				}, 500); // Increased delay to 500ms
+				setHasMore(currentFiltered.length > COMPACT_CHUNK_SIZE);
 			} else {
 				// Regular view behavior remains the same
 				setVisibleIcons(currentFiltered.slice(0, ICONS_PER_PAGE));
