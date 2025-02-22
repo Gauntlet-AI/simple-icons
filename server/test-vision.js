@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import sharp from 'sharp';
+import FormData from 'form-data';
+import fetch from 'node-fetch';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,6 +95,48 @@ async function testVisionAPI() {
 	}
 }
 
+async function testAnalyzeUploadedLogo() {
+	try {
+		// Read the test SVG file
+		const svgBuffer = await fs.readFile(path.join(__dirname, '../docs/sheild.svg'));
+		
+		// Create form data
+		const formData = new FormData();
+		formData.append('file', svgBuffer, {
+			filename: 'shield.svg',
+			contentType: 'image/svg+xml',
+		});
+		formData.append('businessName', 'GauntletAI');
+		formData.append('description', 'Gauntlet AI is an extremely intensive 12-week AI training to turn engineers into the most sought-after builders and entrepreneurs on the planet.');
+		formData.append('brandColor', '#000000');
+
+		// Make the request
+		const response = await fetch('http://localhost:3001/api/analyze-uploaded-logo', {
+			method: 'POST',
+			body: formData,
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const data = await response.json();
+		console.log('Test Results:');
+		console.log('-------------');
+		console.log('Product Description:', data.productDescription);
+		console.log('-------------');
+		console.log('Icon Analysis:', data.iconAnalysis);
+		console.log('-------------');
+		console.log('Design Score:', data.designScore);
+		console.log('Score Explanation:', data.scoreExplanation);
+	} catch (error) {
+		console.error('Test failed:', error);
+	}
+}
+
 // Run the test
 console.log('Starting Vision API test...');
 testVisionAPI();
+
+console.log('Starting Analyze Uploaded Logo test...');
+testAnalyzeUploadedLogo();

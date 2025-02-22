@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { analyzeIcon } from './api/analyze-icon.js';
+import analyzeIcon from './api/analyze-icon.js';
+import analyzeUploadedLogo from './api/analyze-uploaded-logo.js';
 
 const app = express();
 const port = 3001; // Different from your Vite dev server port
@@ -12,8 +13,9 @@ app.use(express.json());
 app.use('/icons', express.static('icons'));
 app.use('/_data', express.static('_data'));
 
-// API endpoint
-app.post('/api/analyze-icon', analyzeIcon);
+// API endpoints
+app.post('/api/analyze-icon', /** @type {express.RequestHandler} */ (analyzeIcon));
+app.post('/api/analyze-uploaded-logo', /** @type {express.RequestHandler} */ (analyzeUploadedLogo));
 
 app.listen(port, () => {
   console.log(`API server running at http://localhost:${port}`);
