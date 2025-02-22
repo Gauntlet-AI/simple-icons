@@ -470,7 +470,7 @@
 		"source": "https://www.aeroflot.ru/ru-en/information/onboard/press"
 	},
 	{
-		"title": "Aerom\u00e9xico",
+		"title": "Aeroméxico",
 		"hex": "0B2343",
 		"industry": [
 			"Air Transportation",
@@ -512,7 +512,7 @@
 		"guidelines": "https://afdian.com/album/248b4bb2c9b111e9a9bb52540025c377/c3d32ae4b5f311eab4a952540025c377",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u7231\u53d1\u7535"
+				"zh-CN": "爱发电"
 			}
 		}
 	},
@@ -893,7 +893,7 @@
 		"source": "https://commons.wikimedia.org/wiki/File:Aldi_Nord_201x_logo.svg"
 	},
 	{
-		"title": "Aldi S\u00fcd",
+		"title": "Aldi Süd",
 		"hex": "00005F",
 		"industry": [
 			"Food and Beverage Stores",
@@ -1003,7 +1003,7 @@
 		"source": "https://forums.alliedmods.net"
 	},
 	{
-		"title": "AlloCin\u00e9",
+		"title": "AlloCiné",
 		"hex": "FECC00",
 		"industry": [
 			"Internet Publishing and Broadcasting",
@@ -1451,7 +1451,7 @@
 				"Ameblo"
 			],
 			"loc": {
-				"ja-JP": "\u30a2\u30e1\u30d6\u30ed"
+				"ja-JP": "アメブロ"
 			}
 		}
 	},
@@ -3163,7 +3163,7 @@
 		"source": "https://www.baidu.com"
 	},
 	{
-		"title": "Bakal\u00e1\u0159i",
+		"title": "Bakaláři",
 		"hex": "00A2E2",
 		"industry": [
 			"Software Publishers",
@@ -4740,7 +4740,7 @@
 				}
 			],
 			"loc": {
-				"fr-CA": "Soci\u00e9t\u00e9 Radio-Canada"
+				"fr-CA": "Société Radio-Canada"
 			}
 		}
 	},
@@ -5200,7 +5200,7 @@
 		"source": "https://brand.citrix.com"
 	},
 	{
-		"title": "Citro\u00ebn",
+		"title": "Citroën",
 		"hex": "DA291C",
 		"industry": [
 			"Motor Vehicle Manufacturing",
@@ -6846,7 +6846,7 @@
 		"source": "https://github.com/dask/dask/blob/67e648922512615f94f8a90726423e721d0e3eb2/docs/source/images/dask_icon_black.svg"
 	},
 	{
-		"title": "Dassault Syst\u00e8mes",
+		"title": "Dassault Systèmes",
 		"hex": "005386",
 		"industry": [
 			"Software Publishers",
@@ -6986,7 +6986,7 @@
 		"source": "https://www.meituan.com/media",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u5927\u4f17\u70b9\u8bc4"
+				"zh-CN": "大众点评"
 			}
 		}
 	},
@@ -7274,7 +7274,7 @@
 			],
 			"loc": {
 				"de-AT": "Magenta Telekom",
-				"mk-MK": "\u041c\u0430\u043a\u0435\u0434\u043e\u043d\u0441\u043a\u0438 \u0422\u0435\u043b\u0435\u043a\u043e\u043c"
+				"mk-MK": "Македонски Телеком"
 			}
 		}
 	},
@@ -10901,7 +10901,7 @@
 		"guidelines": "https://about.google/brand-resource-center/brand-elements/",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\uad6c\uae00"
+				"ko-KR": "구글"
 			}
 		}
 	},
@@ -12275,7 +12275,7 @@
 		"source": "https://hexlet.io",
 		"aliases": {
 			"loc": {
-				"ru-RU": "\u0425\u0435\u043a\u0441\u043b\u0435\u0442"
+				"ru-RU": "Хекслет"
 			}
 		}
 	},
@@ -13023,7 +13023,7 @@
 		"source": "https://www.ikea.com"
 	},
 	{
-		"title": "\u00cele-de-France Mobilit\u00e9s",
+		"title": "Île-de-France Mobilités",
 		"hex": "67B4E7",
 		"industry": [
 			"Transportation and Warehousing",
@@ -13575,7 +13575,7 @@
 		"source": "https://www.isc2.org",
 		"aliases": {
 			"aka": [
-				"(ISC)\u00b2"
+				"(ISC)²"
 			]
 		}
 	},
@@ -14227,7 +14227,7 @@
 		"source": "https://www.kakaocorp.com/kakao/introduce/ci",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\uce74\uce74\uc624"
+				"ko-KR": "카카오"
 			}
 		}
 	},
@@ -14241,7 +14241,7 @@
 		"source": "https://commons.wikimedia.org/wiki/File:KakaoTalk_logo.svg",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\uce74\uce74\uc624\ud1a1"
+				"ko-KR": "카카오톡"
 			}
 		}
 	},
@@ -14591,7 +14591,7 @@
 		"guidelines": "https://www.kinopoisk.ru/special/branding",
 		"aliases": {
 			"loc": {
-				"ru-RU": "\u041a\u0438\u043d\u043e\u041f\u043e\u0438\u0441\u043a"
+				"ru-RU": "КиноПоиск"
 			}
 		}
 	},
@@ -14863,7 +14863,7 @@
 		"guidelines": "https://www.jetbrains.com/company/brand/",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\ucf54\ud2c0\ub9b0"
+				"ko-KR": "코틀린"
 			}
 		}
 	},
@@ -14997,7 +14997,7 @@
 		"source": "https://uk.kyocera.com"
 	},
 	{
-		"title": "L'\u00c9quipe",
+		"title": "L'Équipe",
 		"hex": "E42829",
 		"industry": [
 			"Internet Publishing and Broadcasting",
@@ -15025,7 +15025,7 @@
 		"source": "https://www.lada.ru",
 		"aliases": {
 			"loc": {
-				"ru-RU": "\u041b\u0430\u0434\u0430"
+				"ru-RU": "Лада"
 			}
 		}
 	},
@@ -15646,8 +15646,8 @@
 		"guidelines": "https://line.me/en/logo",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\ub77c\uc778",
-				"ja-JP": "\u30e9\u30a4\u30f3"
+				"ko-KR": "라인",
+				"ja-JP": "ライン"
 			}
 		}
 	},
@@ -15935,7 +15935,7 @@
 					"title": "Logicool",
 					"hex": "00BFFF",
 					"loc": {
-						"ja-JP": "\u30ed\u30b8\u30af\u30fc\u30eb"
+						"ja-JP": "ロジクール"
 					}
 				}
 			]
@@ -16874,7 +16874,7 @@
 		"source": "https://www.meituan.com/media",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u7f8e\u56e2"
+				"zh-CN": "美团"
 			}
 		}
 	},
@@ -16888,7 +16888,7 @@
 		"source": "https://commons.wikimedia.org/wiki/File:Meizu.svg",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u9b45\u65cf"
+				"zh-CN": "魅族"
 			}
 		}
 	},
@@ -17035,7 +17035,7 @@
 		"source": "https://facebook.github.io/metro/"
 	},
 	{
-		"title": "Metro de la Ciudad de M\u00e9xico",
+		"title": "Metro de la Ciudad de México",
 		"hex": "F77E1C",
 		"industry": [
 			"Transportation and Warehousing",
@@ -17053,7 +17053,7 @@
 		"source": "https://commons.wikimedia.org/wiki/File:MetroMadridLogo.svg"
 	},
 	{
-		"title": "M\u00e9tro de Paris",
+		"title": "Métro de Paris",
 		"hex": "003E95",
 		"industry": [
 			"Transportation and Warehousing",
@@ -17753,7 +17753,7 @@
 		"guidelines": "https://www.mulesoft.com/brand"
 	},
 	{
-		"title": "M\u00fcller",
+		"title": "Müller",
 		"hex": "F46519",
 		"industry": [
 			"Health and Personal Care Stores",
@@ -17960,7 +17960,7 @@
 		"source": "https://namu.wiki/w/%ED%8C%8C%EC%9D%BC:%EB%82%98%EB%AC%B4%EC%9C%84%ED%82%A4%20%EC%95%84%EC%9D%B4%EC%BD%98.svg",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\ub098\ubb34\uc704\ud0a4"
+				"ko-KR": "나무위키"
 			}
 		}
 	},
@@ -18053,8 +18053,8 @@
 		"guidelines": "https://developers.naver.com/docs/login/bi/bi.md",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\ub124\uc774\ubc84",
-				"ja-JP": "\u30cd\u30a4\u30d0\u30fc"
+				"ko-KR": "네이버",
+				"ja-JP": "ネイバー"
 			}
 		}
 	},
@@ -18210,7 +18210,7 @@
 		"source": "https://y.music.163.com/m",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u7f51\u6613\u4e91\u97f3\u4e50"
+				"zh-CN": "网易云音乐"
 			}
 		}
 	},
@@ -18310,7 +18310,7 @@
 				}
 			],
 			"loc": {
-				"ja-JP": "\u65b0\u65e5\u672c\u30d7\u30ed\u30ec\u30b9\u30ea\u30f3\u30b0"
+				"ja-JP": "新日本プロレスリング"
 			}
 		}
 	},
@@ -18939,7 +18939,7 @@
 		"guidelines": "https://www.telefonica.de/presse/fotos/logos.html"
 	},
 	{
-		"title": "\u00d6BB",
+		"title": "ÖBB",
 		"hex": "E40327",
 		"industry": [
 			"Transportation and Warehousing",
@@ -18948,7 +18948,7 @@
 		"source": "https://presse.oebb.at/de/fotos-videos/oebb-logos",
 		"aliases": {
 			"aka": [
-				"\u00d6sterreichische Bundesbahnen"
+				"Österreichische Bundesbahnen"
 			]
 		}
 	},
@@ -20608,7 +20608,7 @@
 		"source": "https://magicalmirai.com"
 	},
 	{
-		"title": "Picard Surgel\u00e9s",
+		"title": "Picard Surgelés",
 		"hex": "2D4999",
 		"industry": [
 			"Food and Beverage Stores",
@@ -23658,7 +23658,7 @@
 		"guidelines": "https://www.rstudio.com/about/logos"
 	},
 	{
-		"title": "RT\u00c9",
+		"title": "RTÉ",
 		"hex": "00A7B3",
 		"industry": [
 			"Broadcasting",
@@ -23694,10 +23694,10 @@
 		"source": "https://www.rtm.fr",
 		"aliases": {
 			"aka": [
-				"R\u00e9gie des Transports M\u00e9tropolitains"
+				"Régie des Transports Métropolitains"
 			],
 			"old": [
-				"R\u00e9gie des Transports de Marseille"
+				"Régie des Transports de Marseille"
 			]
 		}
 	},
@@ -24056,7 +24056,7 @@
 		}
 	},
 	{
-		"title": "S\u00e3o Paulo Metro",
+		"title": "São Paulo Metro",
 		"hex": "004382",
 		"industry": [
 			"Transportation and Warehousing",
@@ -24960,12 +24960,12 @@
 				"sy"
 			],
 			"loc": {
-				"zh-CN": "\u601d\u6e90\u7b14\u8bb0",
-				"zh-HK": "\u601d\u6e90\u7b46\u8a18",
-				"zh-MO": "\u601d\u6e90\u7b46\u8a18",
-				"zh-MY": "\u601d\u6e90\u7b14\u8bb0",
-				"zh-SG": "\u601d\u6e90\u7b14\u8bb0",
-				"zh-TW": "\u601d\u6e90\u7b46\u8a18"
+				"zh-CN": "思源笔记",
+				"zh-HK": "思源筆記",
+				"zh-MO": "思源筆記",
+				"zh-MY": "思源笔记",
+				"zh-SG": "思源笔记",
+				"zh-TW": "思源筆記"
 			}
 		}
 	},
@@ -25016,7 +25016,7 @@
 		"source": "https://www.skillshare.com"
 	},
 	{
-		"title": "\u0160KODA",
+		"title": "ŠKODA",
 		"hex": "0E3A2F",
 		"industry": [
 			"Transportation Equipment Manufacturing",
@@ -25276,7 +25276,7 @@
 		"source": "https://socket.io"
 	},
 	{
-		"title": "Softcatal\u00e0",
+		"title": "Softcatalà",
 		"hex": "BA2626",
 		"industry": [
 			"Software Publishers",
@@ -25890,8 +25890,8 @@
 		"aliases": {
 			"loc": {
 				"ch-DE": "Schweizerische Radio- und Fernsehgesellschaft",
-				"ch-FR": "Soci\u00e9t\u00e9 suisse de radiodiffusion et t\u00e9l\u00e9vision",
-				"ch-IT": "Societ\u00e0 svizzera di radiotelevisione",
+				"ch-FR": "Société suisse de radiodiffusion et télévision",
+				"ch-IT": "Società svizzera di radiotelevisione",
 				"ch-RM": "Societad Svizra da Radio e Televisiun",
 				"gb-EN": "Swiss Broadcasting Corporation"
 			}
@@ -26834,7 +26834,7 @@
 		"source": "https://tabelog.com",
 		"aliases": {
 			"loc": {
-				"ja-JP": "\u98df\u3079\u30ed\u30b0"
+				"ja-JP": "食べログ"
 			}
 		}
 	},
@@ -26857,7 +26857,7 @@
 		"source": "https://www.tacobell.com"
 	},
 	{
-		"title": "tado\u00b0",
+		"title": "tado°",
 		"hex": "FFA900",
 		"industry": [
 			"Manufacturing",
@@ -27170,7 +27170,7 @@
 		"source": "https://commons.wikimedia.org/wiki/File:Tele_5_Logo_2021.svg"
 	},
 	{
-		"title": "T\u00e9l\u00e9-Qu\u00e9bec",
+		"title": "Télé-Québec",
 		"hex": "1343FB",
 		"industry": [
 			"Broadcasting",
@@ -27179,7 +27179,7 @@
 		"source": "https://www.telequebec.tv/societe/logo-et-normes-techniques"
 	},
 	{
-		"title": "Telef\u00f3nica",
+		"title": "Telefónica",
 		"hex": "0066FF",
 		"industry": [
 			"Telecommunications",
@@ -27799,7 +27799,7 @@
 		"source": "https://tistory.com",
 		"aliases": {
 			"loc": {
-				"ko-KR": "\ud2f0\uc2a4\ud1a0\ub9ac"
+				"ko-KR": "티스토리"
 			}
 		}
 	},
@@ -28842,7 +28842,7 @@
 		"source": "https://www.uniqlo.com",
 		"aliases": {
 			"loc": {
-				"ja-JP": "\u30e6\u30cb\u30af\u30ed"
+				"ja-JP": "ユニクロ"
 			}
 		}
 	},
@@ -29429,7 +29429,7 @@
 				"VM"
 			],
 			"loc": {
-				"ko-KR": "\ube45\ud1a0\ub9ac\uc544\uba54\ud2b8\ub9ad\uc2a4"
+				"ko-KR": "빅토리아메트릭스"
 			}
 		}
 	},
@@ -30846,7 +30846,7 @@
 		"source": "https://pro.xiaohongshu.com",
 		"aliases": {
 			"loc": {
-				"zh-CN": "\u5c0f\u7ea2\u4e66"
+				"zh-CN": "小红书"
 			}
 		}
 	},
@@ -31177,7 +31177,7 @@
 		"source": "https://github.com/YunoHost/doc/blob/0157b052481407b3c06cc2892de225f14c42520b/images/ynh_logo_black.svg"
 	},
 	{
-		"title": "\u017babka",
+		"title": "Żabka",
 		"hex": "006420",
 		"industry": [
 			"Retail Trade",
