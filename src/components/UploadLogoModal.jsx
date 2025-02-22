@@ -1,4 +1,4 @@
-import { Plus, Upload } from 'lucide-react';
+import { BadgePlus, Upload } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactMarkdown from 'react-markdown';
@@ -112,7 +112,7 @@ export function UploadLogoModal() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
-          <Plus className="h-4 w-4" />
+          <BadgePlus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">

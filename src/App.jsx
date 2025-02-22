@@ -315,60 +315,16 @@ function App() {
 	useEffect(() => {
 		if (!isCompactView) return;
 
-		// Clear any existing timeout
-		if (loadingTimeoutReference.current) {
-			clearTimeout(loadingTimeoutReference.current);
-		}
+		// In compact view, show all icons immediately
+		setVisibleIcons(filteredIcons);
+		setHasMore(false);
 
-		let isMounted = true; // Track if component is mounted
-		
-		const loadIconsInChunks = () => {
-			if (!isMounted) return;
-
-			setVisibleIcons(prevIcons => {
-				const currentLength = prevIcons.length;
-				const endIndex = Math.min(currentLength + COMPACT_CHUNK_SIZE, filteredIcons.length);
-				
-				// If we've loaded everything, stop
-				if (currentLength >= filteredIcons.length) {
-					setHasMore(false);
-					return prevIcons;
-				}
-
-				// Load the next chunk
-				console.log(`Loading icons ${currentLength} to ${endIndex}`);
-				const newIcons = [...prevIcons, ...filteredIcons.slice(currentLength, endIndex)];
-
-				// Schedule next chunk if needed
-				if (endIndex < filteredIcons.length && isMounted) {
-					loadingTimeoutReference.current = window.setTimeout(loadIconsInChunks, COMPACT_LOAD_DELAY);
-				} else {
-					setHasMore(false);
-				}
-
-				return newIcons;
-			});
-		};
-
-		// Start by loading the first chunk
-		console.log('Starting initial load');
-		setVisibleIcons(filteredIcons.slice(0, COMPACT_CHUNK_SIZE));
-		
-		// Schedule loading of subsequent chunks
-		if (filteredIcons.length > COMPACT_CHUNK_SIZE) {
-			loadingTimeoutReference.current = window.setTimeout(loadIconsInChunks, COMPACT_LOAD_DELAY);
-		} else {
-			setHasMore(false);
-		}
-
-		// Cleanup function
 		return () => {
-			isMounted = false;
 			if (loadingTimeoutReference.current) {
 				clearTimeout(loadingTimeoutReference.current);
 			}
 		};
-	}, [isCompactView, filteredIcons, COMPACT_CHUNK_SIZE, COMPACT_LOAD_DELAY]);
+	}, [isCompactView, filteredIcons]);
 
 	const loadMoreIcons = useCallback(() => {
 		if (isCompactView) {
@@ -564,7 +520,7 @@ function App() {
 				
 				// Set initial visible icons based on view mode
 				if (getStoredValue(STORAGE_KEYS.IS_COMPACT_VIEW, false)) {
-					setVisibleIcons(filtered.slice(0, COMPACT_CHUNK_SIZE));
+					setVisibleIcons(filtered); // Show all icons in compact view
 				} else {
 					setVisibleIcons(filtered.slice(0, ICONS_PER_PAGE));
 				}
@@ -689,12 +645,21 @@ function App() {
 		processIconChunk(
 			lastColoredIndex,
 			filteredIcons,
-			10,
+			50,
 			(updatedIcons) => {
+				// Keep all icons visible but update their colored state
 				setFilteredIcons(updatedIcons);
-				// Update visible icons in compact mode to reflect changes
+				// In compact view, make sure all icons stay visible
 				if (isCompactView) {
-					setVisibleIcons(updatedIcons.slice(0, Math.max(COMPACT_CHUNK_SIZE, visibleIcons.length)));
+					// Keep the same icons visible, just update their state
+					setVisibleIcons(prevVisible => {
+						// Map through current visible icons and update their colored state
+						return prevVisible.map(icon => {
+							// Find the updated version of this icon
+							const updatedIcon = updatedIcons.find(updated => updated.slug === icon.slug);
+							return updatedIcon || icon;
+						});
+					});
 				}
 				if (cancelColoringReference.current) {
 					setIsColoringAll(false);
@@ -708,7 +673,7 @@ function App() {
 			(count) => {
 				setColoredIconsCount((previous) => previous + count);
 				setLastColoredIndex((prev) => {
-					const newIndex = Math.min(prev + 10, filteredIcons.length);
+					const newIndex = Math.min(prev + 50, filteredIcons.length);
 					// If we've reached the end, stop the process
 					if (newIndex >= filteredIcons.length) {
 						setIsColoringAll(false);
